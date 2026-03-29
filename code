@@ -207,6 +207,19 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
 .trainer-result.correct { background: var(--success-light); color: var(--success); display: block; border: 1px solid var(--success); }
 .trainer-result.incorrect { background: var(--danger-light); color: var(--danger); display: block; border: 1px solid var(--danger); }
 
+
+
+/* — Lern-Subagenten — */
+.subagent-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.subagent-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 18px; box-shadow: var(--shadow-sm); }
+.subagent-head { display:flex; align-items:center; gap:10px; margin-bottom: 8px; }
+.subagent-icon { width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.05rem; }
+.subagent-name { font-size:0.95rem; font-weight:700; }
+.subagent-focus { font-size:0.82rem; color: var(--text-secondary); margin-bottom:10px; }
+.subagent-list { list-style:none; }
+.subagent-list li { font-size:0.82rem; color: var(--text-secondary); margin:4px 0; padding-left: 14px; position: relative; }
+.subagent-list li::before { content: '•'; position:absolute; left:0; color: var(--accent); }
+
 /* Toasts */
 .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
 .toast { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 20px; font-size: 0.85rem; font-weight: 500; box-shadow: var(--shadow-lg); border-left: 3px solid var(--accent); animation: toastIn 0.3s ease;}
@@ -281,6 +294,8 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
                 </div>
                 <h2 class="section-title">Dein Lernfortschritt</h2>
                 <div class="topic-progress-grid" id="topicProgressGrid"></div>
+                <h2 class="section-title">3 Lern-Subagenten (Fokuspfade)</h2>
+                <div class="subagent-grid" id="subagentGrid"></div>
             </section>
 
             <section class="page" id="page-topics">
@@ -415,71 +430,310 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
    ======================================== */
 const COURSE_DATA = [
   {
-    id: "netzwerke",
-    title: "Netzwerke & Fehlersuche",
+    id: "analyse-entwicklung-netzwerke",
+    title: "Analyse und Entwicklung von Netzwerken",
     icon: "🌐",
     color: "#3d5af1",
     categories: [
       {
-        id: "troubleshooting",
-        title: "Diagnose & Fehlersuche",
+        id: "netzwerksicherheit",
+        title: "Netzwerksicherheit",
         lessons: [
           {
-            id: "osi-troubleshooting",
-            title: "Fehlersuche nach OSI",
+            id: "zertifikate-pki",
+            title: "Zertifikate und PKI",
             content: {
-              description: "Die strukturierte Fehlersuche entlang des OSI-Modells ist ein Kernthema der IHK-Prüfung.",
+              description: "Public-Key-Infrastrukturen sind die Vertrauensbasis für verschlüsselte Kommunikation im Unternehmensnetz.",
               keyPoints: [
-                "Layer 1 (Physical): Kabel, Stecker, LEDs prüfen.",
-                "Layer 2 (Data Link): VLANs, MAC-Adressen, STP-Zustände prüfen.",
-                "Layer 3 (Network): IP-Konfiguration, Subnetzmaske, Default Gateway prüfen (ping, tracert).",
-                "Layer 7 (Application): Dienste, Ports, DNS-Auflösung (nslookup) prüfen."
+                "Bestandteile: Root-CA, Intermediate-CA, Registration Authority, CRL/OCSP.",
+                "Zertifikatslebenszyklus: Beantragung (CSR), Ausstellung, Verteilung, Erneuerung, Sperrung.",
+                "Wichtige Felder: Subject, SAN, Issuer, Gültigkeit, Key Usage, EKU.",
+                "Typische Fehler: Abgelaufenes Zertifikat, falscher Hostname im SAN, nicht vertrauenswürdige CA.",
+                "Härtung: Private Keys in HSM/TPM schützen, kurze Laufzeiten, automatisierte Erneuerung."
               ],
-              examTip: "In fast jeder AP gibt es eine Aufgabe, in der du die Ausgabe von 'ping' (Latenzen, Timeouts) oder 'nslookup' interpretieren musst.",
-              keyTerms: "OSI-Modell | ping | tracert | nslookup",
+              examTip: "In Prüfungen musst du oft erklären, warum ein Zertifikat als ungültig bewertet wird. Prüfe immer SAN, Kette und Ablaufdatum.",
+              keyTerms: "PKI | CA | CSR | CRL | OCSP | SAN",
               flashcards: [
-                { q: "Wie gehst du bei der Fehlersuche nach dem OSI-Modell vor?", a: "Entweder Bottom-Up (von Layer 1 aufwärts) oder Top-Down (von Layer 7 abwärts), um Fehlerquellen systematisch einzugrenzen." },
-                { q: "Was bedeutet die Fehlermeldung 'Non-existent domain' bei nslookup?", a: "Der angefragte DNS-Name existiert nicht auf dem autoritativen Nameserver (Eintrag fehlt oder Tippfehler)." },
-                { q: "Wofür nutzt man tracert (bzw. traceroute)?", a: "Um den Routing-Pfad (Hops) eines IP-Pakets zum Ziel zu verfolgen und herauszufinden, an welchem Router die Verbindung abbricht." }
+                { q: "Wozu dient eine Intermediate-CA?", a: "Sie trennt die operative Signierung von der Root-CA. Bei Kompromittierung bleibt die Root-CA geschützt." },
+                { q: "Was ist der Unterschied zwischen CRL und OCSP?", a: "CRL ist eine periodisch veröffentlichte Sperrliste, OCSP liefert den Sperrstatus eines Zertifikats in Echtzeit." }
+              ]
+            }
+          },
+          {
+            id: "tls-ssl",
+            title: "TLS/SSL",
+            content: {
+              description: "TLS schützt Vertraulichkeit, Integrität und Authentizität zwischen Client und Server.",
+              keyPoints: [
+                "Handshake: Version/Cipher-Suite-Aushandlung, Zertifikatsprüfung, Schlüsselaustausch, Session Keys.",
+                "TLS 1.2 vs TLS 1.3: Weniger Roundtrips und sicherere Standard-Cipher in TLS 1.3.",
+                "Perfect Forward Secrecy durch (EC)DHE verhindert rückwirkende Entschlüsselung.",
+                "Unsichere Verfahren vermeiden: SSLv3, TLS 1.0/1.1, RC4, schwache RSA-Schlüssel.",
+                "Betrieb: HSTS, sichere Ciphers, Zertifikatsmonitoring, regelmäßige Scans."
+              ],
+              examTip: "Wenn 'SSL' in Aufgaben steht, ist meist modernes TLS gemeint. Benenne den korrekten Standard und Risiken alter Protokolle.",
+              flashcards: [
+                { q: "Warum gilt TLS 1.3 als sicherer als TLS 1.2?", a: "Unsichere Algorithmen wurden entfernt, der Handshake vereinfacht und Forward Secrecy ist Standard." },
+                { q: "Was bedeutet HSTS?", a: "Der Browser darf eine Domain nur noch über HTTPS ansprechen und verhindert Downgrade-Angriffe." }
+              ]
+            }
+          },
+          {
+            id: "firewall",
+            title: "Firewall",
+            content: {
+              description: "Firewalls segmentieren Netze und erzwingen definierte Kommunikationsregeln.",
+              keyPoints: [
+                "Arten: Paketfilter, Stateful Inspection, Application/Next-Gen Firewall.",
+                "Regelwerk: Default-Deny, minimale Freigaben, klare Richtung (src/dst/service).",
+                "Zonenmodell: WAN, DMZ, LAN, Management-Netz getrennt absichern.",
+                "Wichtige Betriebsaufgaben: Log-Review, Regelbereinigung, Änderungsdokumentation.",
+                "Ergänzung: IDS/IPS sowie Egress-Filter gegen Datenabfluss einsetzen."
+              ],
+              examTip: "Beschreibe bei einer Regel immer: Quelle, Ziel, Port/Protokoll, Aktion und Begründung.",
+              flashcards: [
+                { q: "Was bedeutet Default-Deny?", a: "Alles ist zunächst verboten, nur explizit erlaubte Verbindungen werden zugelassen." },
+                { q: "Wofür dient eine DMZ?", a: "Öffentlich erreichbare Systeme werden vom internen LAN getrennt und so das Risiko reduziert." }
               ]
             }
           }
         ]
       },
       {
-        id: "netz-basics",
-        title: "Infrastruktur & Sicherheit",
+        id: "netzwerkgrundlagen",
+        title: "Netzwerkgrundlagen",
         lessons: [
           {
-            id: "subnetting-vlan",
-            title: "IP, Subnetting & VLAN",
+            id: "ip-adressierung",
+            title: "IP-Adressierung",
             content: {
-              description: "Die absolute Basis. Subnetting und VLAN-Konzepte müssen blind sitzen.",
+              description: "Saubere IP-Planung ist Voraussetzung für Routing, Sicherheit und Skalierbarkeit.",
               keyPoints: [
-                "IPv4 Subnetting (inkl. VLSM zur effizienten Adressnutzung).",
-                "IPv6 Grundlagen und SLAAC.",
-                "VLAN: Access-Port (ein VLAN, ungetaggt) vs. Trunk-Port (mehrere VLANs, 802.1Q getaggt).",
-                "Inter-VLAN-Routing benötigt Layer-3-Geräte (Router oder L3-Switch)."
+                "IPv4: Netz- und Hostanteil über CIDR, private Netze nach RFC1918.",
+                "Subnetting/VLSM: bedarfsgerechte Aufteilung statt Adressverschwendung.",
+                "IPv6: Global Unicast, Link-Local, ULA; Präfixe typischerweise /64 pro Segment.",
+                "Adresskonflikte vermeiden durch zentrales IPAM und konsistente Dokumentation.",
+                "Gateway, DNS und NTP als Pflichtparameter je Segment definieren."
               ],
               flashcards: [
-                { q: "Was ist der Unterschied zwischen einem Access-Port und einem Trunk-Port?", a: "Access-Port: Gehört zu genau einem VLAN (für Endgeräte). Trunk-Port: Überträgt den Traffic mehrerer VLANs mittels 802.1Q Tags (oft zwischen Switches)." },
-                { q: "Welche Funktion hat ein DHCP-Relay?", a: "Es leitet DHCP-Broadcasts (DORA-Prozess) aus einem Subnetz an einen zentralen DHCP-Server in einem anderen Subnetz weiter." }
+                { q: "Wie viele nutzbare Hosts hat ein /27-Netz?", a: "30 Hosts (32 Adressen gesamt minus Netz- und Broadcastadresse)." },
+                { q: "Wofür wird eine Link-Local-IPv6-Adresse genutzt?", a: "Für lokale Kommunikation im gleichen Layer-2-Segment, nicht geroutet." }
               ]
             }
           },
           {
-            id: "fw-vpn",
-            title: "Firewalls & VPN",
+            id: "vlan",
+            title: "VLAN",
             content: {
-              description: "Absicherung von Netzwerken durch Firewalls und sichere Tunnel.",
+              description: "VLANs trennen Broadcast-Domänen logisch auf einem gemeinsamen Switch-Infrastrukturlayer.",
               keyPoints: [
-                "Stateful Firewall (merkt sich Verbindungsstatus) vs. Next Gen Firewall (NGFW - inkl. SSL Inspection, IPS).",
-                "Allow-List-Prinzip: Alles verbieten, nur explizit Benötigtes erlauben.",
-                "Hybride Verschlüsselung bei TLS/SSL: Asymmetrisch für Schlüsselaustausch, Symmetrisch für Daten."
+                "Access-Port: untagged Frames in genau einem VLAN.",
+                "Trunk-Port: mehrere VLANs via 802.1Q-Tags zwischen Netzwerkgeräten.",
+                "Inter-VLAN-Routing über Layer-3-Switch oder Router-on-a-Stick.",
+                "Best Practice: separates Management-VLAN und restriktive ACLs zwischen VLANs.",
+                "Fehlerquellen: Native-VLAN-Mismatch, falsche Portzuordnung, fehlendes Routing."
               ],
               flashcards: [
-                { q: "Was ist der wesentliche Vorteil einer hybriden Verschlüsselung (z.B. bei TLS)?", a: "Sie nutzt asymmetrische Verschlüsselung für den sicheren, initialen Schlüsselaustausch und die schnelle symmetrische Verschlüsselung für die eigentliche Datenübertragung." },
-                { q: "Erkläre das 'Allow-List' (Whitelist) Prinzip bei Firewalls.", a: "Es ist pauschal alles verboten (Default Deny), was nicht durch eine explizite Regel erlaubt wurde. Bietet höchste Sicherheit." }
+                { q: "Warum sind VLANs sicherheitsrelevant?", a: "Sie begrenzen Broadcasts und reduzieren laterale Bewegungen durch Segmentierung." },
+                { q: "Was ist ein Native VLAN?", a: "Das VLAN, dessen Frames auf einem Trunk ungetaggt übertragen werden." }
+              ]
+            }
+          },
+          {
+            id: "nat-pat",
+            title: "NAT/PAT",
+            content: {
+              description: "NAT/PAT übersetzt interne Adressen für den Zugriff auf externe Netze.",
+              keyPoints: [
+                "SNAT maskiert interne Quellen nach außen, DNAT veröffentlicht interne Dienste.",
+                "PAT (NAT Overload) nutzt Ports, um viele interne Hosts über eine öffentliche IP abzubilden.",
+                "Statische NAT-Regeln für feste Zuordnungen, dynamische Pools für flexible Übersetzung.",
+                "Grenzen: erschwerte Ende-zu-Ende-Erreichbarkeit und Protokollprobleme ohne ALG.",
+                "Sicherheitsaspekt: NAT ersetzt keine Firewall-Regeln."
+              ],
+              flashcards: [
+                { q: "Wann benötigst du DNAT?", a: "Wenn ein externer Client einen internen Dienst erreichen soll (z. B. Webserver)." },
+                { q: "Was ist der Unterschied zwischen NAT und PAT?", a: "NAT übersetzt primär IP-Adressen, PAT zusätzlich Ports für Mehrfachnutzung einer öffentlichen IP." }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        id: "netzwerkdienste",
+        title: "Netzwerkdienste",
+        lessons: [
+          {
+            id: "dns",
+            title: "DNS",
+            content: {
+              description: "DNS ist das verteilte Namenssystem und kritisch für nahezu jede Anwendung.",
+              keyPoints: [
+                "Record-Typen: A/AAAA, CNAME, MX, TXT, SRV, PTR.",
+                "Auflösung: rekursiv vs. iterativ, Caching über TTL.",
+                "Split-DNS trennt interne und externe Namensräume.",
+                "Sicherheit: DNSSEC, Response Rate Limiting, Logging auf Anomalien.",
+                "Troubleshooting mit nslookup/dig und korrekter Zonendelegation."
+              ],
+              flashcards: [
+                { q: "Wofür wird ein PTR-Record genutzt?", a: "Für Reverse-DNS: IP-Adresse zu Hostname." },
+                { q: "Was macht eine TTL im DNS?", a: "Sie definiert, wie lange Resolver einen Eintrag cachen dürfen." }
+              ]
+            }
+          },
+          {
+            id: "voip-echtzeit",
+            title: "VoIP und Echtzeit-Kommunikation",
+            content: {
+              description: "Echtzeitdienste benötigen geringe Latenz, Jitter-Kontrolle und priorisierten Transport.",
+              keyPoints: [
+                "Signalisierung meist via SIP, Medienströme über RTP/RTCP.",
+                "QoS: Priorisierung mit DSCP (z. B. EF für Sprache).",
+                "Wichtige KPIs: Latenz <150 ms, Jitter <30 ms, Packet Loss <1%.",
+                "Sicherheitsmaßnahmen: SRTP, TLS für SIP, Session Border Controller.",
+                "PoE und Voice-VLAN vereinfachen Betrieb und Segmentierung."
+              ],
+              flashcards: [
+                { q: "Welche Rolle spielt RTP in VoIP?", a: "Es transportiert die eigentlichen Audio-/Videodatenströme in Echtzeit." },
+                { q: "Warum ist QoS bei VoIP wichtig?", a: "Damit Sprachpakete unter Last priorisiert und Verzögerungen reduziert werden." }
+              ]
+            }
+          },
+          {
+            id: "dhcp",
+            title: "DHCP",
+            content: {
+              description: "DHCP automatisiert die Adressvergabe und reduziert Konfigurationsfehler.",
+              keyPoints: [
+                "DORA-Prozess: Discover, Offer, Request, Acknowledge.",
+                "Lease-Zeiten an Endgerätetyp und Netzgröße anpassen.",
+                "Reservierungen für Server/Printer, Optionen für Gateway, DNS, NTP, PXE.",
+                "DHCP-Relay ermöglicht zentrale DHCP-Server über Subnetzgrenzen.",
+                "Absicherung via DHCP Snooping gegen Rogue-DHCP."
+              ],
+              flashcards: [
+                { q: "Warum braucht man DHCP-Relay?", a: "Weil DHCP-Broadcasts Routergrenzen nicht überschreiten und weitergeleitet werden müssen." },
+                { q: "Was ist ein Rogue-DHCP-Server?", a: "Ein unerlaubter DHCP-Dienst, der falsche Netzparameter verteilt." }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        id: "netzinfrastruktur",
+        title: "Netzwerkinfrastruktur",
+        lessons: [
+          {
+            id: "routing",
+            title: "Routing",
+            content: {
+              description: "Routing verbindet Netze und bestimmt den besten Pfad anhand von Metriken und Topologie.",
+              keyPoints: [
+                "Statisches Routing für einfache Umgebungen, dynamisch mit OSPF/BGP für Skalierung.",
+                "Longest Prefix Match entscheidet bei mehreren möglichen Routen.",
+                "Default-Route für unbekannte Ziele, Summarization reduziert Routingtabellen.",
+                "Redundanz mit HSRP/VRRP und ECMP für Lastverteilung.",
+                "Diagnose mit traceroute, routing table inspection und ACL-Checks."
+              ],
+              flashcards: [
+                { q: "Was ist Longest Prefix Match?", a: "Der Router wählt die Route mit dem spezifischsten (längsten) passenden Präfix." },
+                { q: "Wann nutzt man eine Default-Route?", a: "Wenn kein spezifischer Eintrag für ein Ziel vorhanden ist." }
+              ]
+            }
+          },
+          {
+            id: "verkabelung",
+            title: "Verkabelung",
+            content: {
+              description: "Strukturierte Verkabelung bildet die physische Grundlage stabiler Netzwerke.",
+              keyPoints: [
+                "Kupfer: Cat6A/Cat7 für 10G, Längenlimit 100 m pro Segment.",
+                "Glasfaser: MMF für kürzere Strecken, SMF für große Distanzen.",
+                "Patchpanel, Labeling und Messprotokolle sind Pflicht für Betrieb/Abnahme.",
+                "EMV-Aspekte beachten: Trennung von Strom- und Datenkabeln.",
+                "Redundante Trassen in kritischen Bereichen einplanen."
+              ],
+              flashcards: [
+                { q: "Wann ist Singlemode-Faser sinnvoll?", a: "Bei großen Distanzen und hoher Bandbreite mit geringen Dämpfungsverlusten." },
+                { q: "Warum ist sauberes Labeling wichtig?", a: "Es beschleunigt Fehleranalyse, Änderungen und Dokumentation erheblich." }
+              ]
+            }
+          },
+          {
+            id: "netzwerkhardware",
+            title: "Netzwerkhardware",
+            content: {
+              description: "Switches, Router, Access Points und Security-Appliances müssen passend dimensioniert werden.",
+              keyPoints: [
+                "Switching: Portdichte, Backplane, PoE-Budget und Stacking-Fähigkeit prüfen.",
+                "Router/Firewalls nach Durchsatz, gleichzeitigen Sessions und VPN-Performance auswählen.",
+                "WLAN: Controller-basiert vs. cloud-managed, Kanalplanung und Roaming.",
+                "Monitoring-fähige Geräte (SNMP/Telemetry) erleichtern Betrieb.",
+                "Lifecycle-Management: Firmware, Ersatzteile, End-of-Support früh planen."
+              ],
+              flashcards: [
+                { q: "Warum ist das PoE-Budget relevant?", a: "Es bestimmt, wie viele Endgeräte (APs, Telefone, Kameras) gleichzeitig versorgt werden können." },
+                { q: "Was bedeutet End-of-Support?", a: "Ab diesem Zeitpunkt gibt es keine Herstellerupdates/Sicherheitsfixes mehr." }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        id: "netzwerkanalyse",
+        title: "Netzwerkanalyse",
+        lessons: [
+          {
+            id: "fehleranalyse",
+            title: "Fehleranalyse",
+            content: {
+              description: "Effektive Fehleranalyse folgt reproduzierbaren Schritten statt Trial-and-Error.",
+              keyPoints: [
+                "Symptome erfassen, Scope eingrenzen, Hypothesen bilden, Tests priorisieren.",
+                "OSI-basierter Ablauf verhindert blinde Fehlersuche.",
+                "Change-Historie und Wartungsfenster berücksichtigen.",
+                "Wiederholbare Testfälle und Baselines dokumentieren.",
+                "Post-Mortem mit Root-Cause-Analyse und Präventionsmaßnahmen."
+              ],
+              flashcards: [
+                { q: "Was ist der Unterschied zwischen Symptom und Root Cause?", a: "Das Symptom ist die sichtbare Auswirkung, die Root Cause die eigentliche Ursache." },
+                { q: "Warum sind Baselines wichtig?", a: "Sie ermöglichen den Vergleich von Soll- und Ist-Verhalten bei Störungen." }
+              ]
+            }
+          },
+          {
+            id: "netzwerkdiagnose",
+            title: "Netzwerkdiagnose",
+            content: {
+              description: "Diagnosewerkzeuge liefern objektive Daten für schnelle Entstörung.",
+              keyPoints: [
+                "Basis-Tools: ping, traceroute, arp, ipconfig/ifconfig, netstat, ss.",
+                "SNMP/Telemetry für Interface-Errors, Auslastung und Device-Health.",
+                "Flow-Daten (NetFlow/sFlow/IPFIX) zeigen Top-Talker und Engpässe.",
+                "Synthetische Tests überwachen kritische Services proaktiv.",
+                "Alarme müssen priorisiert und mit klaren Runbooks verknüpft sein."
+              ],
+              flashcards: [
+                { q: "Was zeigt NetFlow besonders gut?", a: "Wer mit wem wie viel Daten über welche Ports/Protokolle austauscht." },
+                { q: "Wann hilft traceroute am meisten?", a: "Wenn unklar ist, an welchem Hop die Verbindung scheitert oder stark verzögert wird." }
+              ]
+            }
+          },
+          {
+            id: "protokollanalyse",
+            title: "Protokollanalyse",
+            content: {
+              description: "Paketanalysen offenbaren Timing-, Retransmission- und Protokollprobleme präzise.",
+              keyPoints: [
+                "Wireshark-Filter (display/capture) gezielt einsetzen.",
+                "TCP-Indikatoren: SYN/SYN-ACK, Retransmissions, Window Size, RST.",
+                "TLS-Analyse: Handshake-Fehler, Zertifikatskette, Versions-/Cipher-Mismatch.",
+                "DNS-Analyse: NXDOMAIN, SERVFAIL, Timeout und falsche Delegation erkennen.",
+                "Datenschutz beachten: Payload-Minimierung und sichere Trace-Ablage."
+              ],
+              flashcards: [
+                { q: "Was deutet auf Paketverlust in TCP hin?", a: "Häufige Retransmissions und Duplicate ACKs." },
+                { q: "Was bedeutet NXDOMAIN?", a: "Der abgefragte Domainname existiert laut zuständigem DNS-Server nicht." }
               ]
             }
           }
@@ -488,163 +742,289 @@ const COURSE_DATA = [
     ]
   },
   {
-    id: "it-systeme",
-    title: "IT-Systeme & Administration",
+    id: "konzeption-administration-it-systeme",
+    title: "Konzeption und Administration von IT-Systemen",
     icon: "🖥️",
     color: "#10b981",
     categories: [
       {
-        id: "sys-storage",
-        title: "Speicher & Backup",
+        id: "softwareentwicklung",
+        title: "Softwareentwicklung",
         lessons: [
           {
-            id: "raid-concept",
-            title: "RAID & Speicherkonzepte",
+            id: "algorithmen-pseudocode",
+            title: "Algorithmen und Pseudocode",
             content: {
-              description: "Kapazitätsberechnungen und Ausfallsicherheit von Festplatten.",
+              description: "Algorithmen beschreiben lösungsorientierte, reproduzierbare Schritte unabhängig von einer Programmiersprache.",
               keyPoints: [
-                "RAID 1: Spiegelung (50% Verlust).",
-                "RAID 5: Striping mit Parität (1 Platte Redundanz).",
-                "RAID 6: Striping mit doppelter Parität (2 Platten Redundanz).",
-                "RAID 10: Striping über gespiegelte Sets (Hohe Performance, 50% Verlust)."
+                "Grundstrukturen: Sequenz, Auswahl (if/switch), Wiederholung (for/while).",
+                "Komplexität grob bewerten (Zeit/Platz), auch ohne volle O-Notation.",
+                "Pseudocode klar, konsistent und testbar formulieren.",
+                "Randfälle und Fehlerpfade explizit berücksichtigen.",
+                "Vor Implementierung Akzeptanzkriterien definieren."
               ],
-              examTip: "Lerne die Netto-Kapazitätsformeln: RAID 5 = (n-1)*Größe. RAID 6 = (n-2)*Größe.",
               flashcards: [
-                { q: "Wie viel Netto-Kapazität bietet ein RAID 5 aus 4 Festplatten à 2 TB?", a: "6 TB. Rechnung: (4 - 1) * 2 TB = 6 TB. Eine Platte geht für Paritätsdaten verloren." },
-                { q: "Was ist der Unterschied zwischen NAS und SAN?", a: "NAS (Network Attached Storage) stellt Speicher auf Dateiebene (File-Level) bereit. SAN (Storage Area Network) stellt Speicher auf Blockebene (Block-Level) bereit, oft über Fibre Channel oder iSCSI." }
+                { q: "Warum ist Pseudocode in der Prüfung hilfreich?", a: "Er zeigt strukturiertes Denken, auch wenn die exakte Syntax einer Sprache nicht gefordert ist." },
+                { q: "Was sind typische Randfälle?", a: "Leere Eingaben, Nullwerte, negative Werte, sehr große Werte und ungültige Formate." }
               ]
             }
           },
           {
-            id: "backup-strategy",
-            title: "Backup & Archivierung",
+            id: "testen-debugging",
+            title: "Testen und Debugging",
             content: {
-              description: "Rücksicherungskonzepte und rechtliche Vorgaben.",
+              description: "Qualität entsteht durch systematisches Testen entlang der Entwicklungsphasen.",
               keyPoints: [
-                "Vollbackup (setzt Archivbit), Differentiell (liest Archivbit, ändert es nicht), Inkrementell (setzt Archivbit zurück).",
-                "RTO (Recovery Time Objective): Wie lange darf ein System ausfallen?",
-                "RPO (Recovery Point Objective): Wie viel Datenverlust ist tolerierbar?",
-                "Archivierung: Revisionssicher, unveränderbar (WORM), langzeit."
+                "Testpyramide: viele Unit-Tests, weniger Integrations- und wenige End-to-End-Tests.",
+                "Fehlerklassen: funktional, Performance, Sicherheit, Usability.",
+                "Debugging-Methodik: Reproduzieren, eingrenzen, Ursache beheben, Regressionstest.",
+                "Mocks/Stubs isolieren Abhängigkeiten für stabile Tests.",
+                "CI/CD führt automatisierte Tests bei jedem Commit aus."
               ],
               flashcards: [
-                { q: "Welche Bänder benötigst du für einen Restore, wenn am Montag voll und Di-Fr inkrementell gesichert wurde (Ausfall am Freitagmittag)?", a: "Das Vollbackup vom Montag PLUS alle inkrementellen Backups von Dienstag, Mittwoch und Donnerstag." },
-                { q: "Was bedeutet Revisionssicherheit bei der Archivierung?", a: "Daten müssen nachvollziehbar, vollständig und unveränderbar (Write Once Read Many - WORM) gespeichert werden." }
+                { q: "Was ist ein Regressionstest?", a: "Ein Test, der prüft, dass eine Änderung keine zuvor funktionierenden Bereiche zerstört." },
+                { q: "Warum sind reproduzierbare Bugs wichtig?", a: "Nur reproduzierbare Fehler lassen sich sicher eingrenzen und zuverlässig verifizieren." }
               ]
             }
           }
         ]
       },
       {
-        id: "sys-windows",
-        title: "Windows Server & Cloud",
+        id: "it-sicherheit",
+        title: "IT-Sicherheit",
         lessons: [
           {
-            id: "ad-gpo",
-            title: "Active Directory & GPOs",
+            id: "kryptographie",
+            title: "Kryptographie",
             content: {
-              description: "Verwaltung von Windows-Infrastrukturen.",
+              description: "Kryptographie schützt Daten durch mathematische Verfahren in Ruhe und Übertragung.",
               keyPoints: [
-                "Domain Controller authentifiziert Benutzer (Kerberos).",
-                "OUs (Organizational Units) strukturieren das AD logisch.",
-                "GPOs (Group Policy Objects) erzwingen Einstellungen."
+                "Symmetrisch (z. B. AES) für schnelle Datenverschlüsselung, asymmetrisch (z. B. RSA/ECC) für Schlüsselaustausch.",
+                "Hashing (z. B. SHA-256) für Integrität, nicht zur Verschlüsselung.",
+                "Digitale Signaturen sichern Integrität und Authentizität.",
+                "Schlüsselmanagement ist oft wichtiger als der Algorithmus selbst.",
+                "Passwortspeicherung nur gehasht und gesalzen (z. B. Argon2/bcrypt)."
               ],
               flashcards: [
-                { q: "Was ist ein Domain Controller (DC)?", a: "Ein zentraler Server, der das Active Directory (AD) hostet und für die Authentifizierung sowie Autorisierung im Netzwerk zuständig ist." },
-                { q: "In welcher Reihenfolge werden GPOs angewendet (LSDOU)?", a: "Local -> Site -> Domain -> OU. Die zuletzt angewendete Richtlinie (z.B. OU) gewinnt bei Konflikten." }
+                { q: "Warum braucht man Salt beim Passwort-Hashing?", a: "Es verhindert gleiche Hashes bei gleichen Passwörtern und erschwert Rainbow-Table-Angriffe." },
+                { q: "Was garantiert eine digitale Signatur?", a: "Dass Daten unverändert sind und vom angegebenen Absender stammen." }
               ]
             }
           },
           {
-            id: "cloud-models",
-            title: "Cloud Servicemodelle",
+            id: "email-sicherheit",
+            title: "E-Mail-Sicherheit",
             content: {
-              description: "IaaS, PaaS, SaaS - Die Basics.",
+              description: "E-Mail bleibt ein Hauptangriffsvektor und benötigt technische wie organisatorische Schutzmaßnahmen.",
               keyPoints: [
-                "IaaS: Infrastruktur (Hardware, Netz) wird bereitgestellt. OS verwaltet der Kunde.",
-                "PaaS: Plattform (OS, Laufzeitumgebung) bereitgestellt. Code verwaltet der Kunde.",
-                "SaaS: Komplette Software (z.B. Microsoft 365) als Dienst."
+                "SPF, DKIM, DMARC schützen Domain-Authentizität und reduzieren Spoofing.",
+                "Transportverschlüsselung via STARTTLS, Ende-zu-Ende via S/MIME oder OpenPGP.",
+                "Secure Email Gateway filtert Spam, Malware und Phishing.",
+                "Awareness-Trainings und Meldewege für verdächtige Mails etablieren.",
+                "Archivierung und Journaling nach Compliance-Anforderungen planen."
               ],
               flashcards: [
-                { q: "Erkläre das IaaS (Infrastructure as a Service) Modell.", a: "Der Anbieter stellt Hardware-Ressourcen (Server, Storage, Netzwerk) virtuell bereit. Der Kunde installiert und verwaltet das Betriebssystem sowie Anwendungen." },
-                { q: "Was ist der Unterschied zwischen Virtualisierung und Containerisierung?", a: "Virtualisierung simuliert komplette Hardware inkl. eigenem Gast-OS. Container teilen sich den Kernel des Host-OS und sind extrem leichtgewichtig und schnell startbar." }
-              ]
-            }
-          }
-        ]
-      }
-    ]
-  },
-  {
-    id: "prozesse",
-    title: "Prozessanalyse & PM",
-    icon: "⚙️",
-    color: "#8b5cf6",
-    categories: [
-      {
-        id: "pm-bpmn",
-        title: "BPMN & Projektmanagement",
-        lessons: [
-          {
-            id: "bpmn-basics",
-            title: "BPMN 2.0 Modellierung",
-            content: {
-              description: "Geschäftsprozesse standardisiert visualisieren.",
-              keyPoints: [
-                "Pools und Swimlanes zeigen Zuständigkeiten.",
-                "XOR-Gateway (Exklusiv-Oder): Entweder der eine oder der andere Weg.",
-                "AND-Gateway (Parallel): Beide Wege werden gleichzeitig ausgeführt.",
-                "OR-Gateway (Inklusiv): Einer oder mehrere Wege, je nach Bedingung."
-              ],
-              examTip: "Die Gateways werden IMMER abgefragt. Lerne die genauen Unterschiede zwischen XOR, AND und OR.",
-              flashcards: [
-                { q: "Was macht ein XOR-Gateway in BPMN?", a: "Es teilt den Prozessfluss an einer Entscheidung auf. Nur exakt EIN ausgehender Pfad darf gewählt werden (Entweder-Oder)." },
-                { q: "Was stellt ein UML-Use-Case-Diagramm (Anwendungsfalldiagramm) dar?", a: "Es zeigt, WELCHE Funktionen (Use Cases) ein System aus Sicht der Benutzer (Akteure) bietet, ohne den genauen technischen Ablauf zu zeigen." }
-              ]
-            }
-          }
-        ]
-      }
-    ]
-  },
-  {
-    id: "wiso",
-    title: "Wirtschafts- und Sozialkunde",
-    icon: "📈",
-    color: "#f5a623",
-    categories: [
-      {
-        id: "wiso-recht",
-        title: "Arbeitsrecht & Verträge",
-        lessons: [
-          {
-            id: "arbeitsvertrag",
-            title: "Kündigung & Mutterschutz",
-            content: {
-              description: "Wichtige gesetzliche Rahmenbedingungen für Arbeitnehmer.",
-              keyPoints: [
-                "Kündigungsgründe: Personen-, verhaltens-, betriebsbedingt.",
-                "Gesetzliche Kündigungsfrist (BGB §622): 4 Wochen zum 15. oder Monatsende.",
-                "Mutterschutz: Absolutes Beschäftigungsverbot 6 Wochen vor und 8 Wochen nach der Entbindung."
-              ],
-              flashcards: [
-                { q: "Welche drei Arten von Kündigungsgründen kennt das KSchG?", a: "Personenbedingt (z.B. Langzeiterkrankung), Verhaltensbedingt (z.B. Diebstahl, unentschuldigtes Fehlen) und Betriebsbedingt (z.B. Abteilungsschließung)." },
-                { q: "Was regelt ein Manteltarifvertrag im Gegensatz zum Lohntarifvertrag?", a: "Der Manteltarifvertrag regelt allgemeine Bedingungen (Urlaubstage, Arbeitszeiten, Kündigungsfristen). Der Lohntarifvertrag regelt ausschließlich die Vergütung." }
+                { q: "Wozu dient DMARC?", a: "Es legt fest, wie Empfänger mit SPF/DKIM-Fehlschlägen umgehen und liefert Reportdaten." },
+                { q: "Was ist der Unterschied zwischen TLS und S/MIME?", a: "TLS schützt den Transportweg, S/MIME schützt den Inhalt Ende-zu-Ende." }
               ]
             }
           },
           {
-            id: "sozial-orga",
-            title: "Sozialversicherung & Rechtsformen",
+            id: "it-sicherheit-grundlagen",
+            title: "Grundlagen",
             content: {
-              description: "Wie Unternehmen und Absicherungen funktionieren.",
+              description: "Grundlagen der Informationssicherheit orientieren sich an Risiko und Schutzbedarf.",
               keyPoints: [
-                "Die 5 Zweige der Sozialversicherung (Kranken, Pflege, Renten, Arbeitslosen, Unfall).",
-                "Unfallversicherung zahlt ALLEIN der Arbeitgeber.",
-                "Rechtsformen: GmbH (beschränkte Haftung, mind. 25.000€ Stammkapital), OHG (Vollhaftung)."
+                "CIA-Triade: Vertraulichkeit, Integrität, Verfügbarkeit.",
+                "Zero-Trust: Keine implizite Vertrauensannahme im internen Netz.",
+                "MFA, Least Privilege und Patchmanagement als Basismaßnahmen.",
+                "Risikobehandlung: vermeiden, vermindern, übertragen, akzeptieren.",
+                "Notfallpläne und Incident-Response-Prozesse regelmäßig testen."
               ],
               flashcards: [
-                { q: "Welche der gesetzlichen Sozialversicherungen wird alleinig vom Arbeitgeber bezahlt?", a: "Die gesetzliche Unfallversicherung. Träger sind die Berufsgenossenschaften." },
-                { q: "Wer haftet bei einer GmbH?", a: "Ausschließlich die Gesellschaft mit dem Gesellschaftsvermögen. Die Gesellschafter haften nicht mit ihrem Privatvermögen." }
+                { q: "Was bedeutet Least Privilege?", a: "Benutzer und Dienste erhalten nur die minimal erforderlichen Berechtigungen." },
+                { q: "Warum ist MFA wichtig?", a: "Sie reduziert das Risiko kompromittierter Passwörter deutlich." }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        id: "speichersysteme",
+        title: "Speichersysteme",
+        lessons: [
+          {
+            id: "raid",
+            title: "RAID",
+            content: {
+              description: "RAID kombiniert Verfügbarkeit, Performance und Kapazität je nach Level unterschiedlich.",
+              keyPoints: [
+                "RAID 1: Spiegelung; RAID 5/6: Parität; RAID 10: Striping über Mirrors.",
+                "Kapazität: RAID5=(n-1)*Disk, RAID6=(n-2)*Disk, RAID10=(n/2)*Disk.",
+                "Rebuild-Zeiten steigen mit Plattengröße und Auslastung.",
+                "Hot-Spare reduziert Wiederherstellungszeit nach Ausfall.",
+                "RAID ersetzt kein Backup."
+              ],
+              flashcards: [
+                { q: "Welcher RAID-Level toleriert zwei gleichzeitige Plattenausfälle?", a: "RAID 6 dank doppelter Parität." },
+                { q: "Warum ist RAID kein Backup?", a: "Es schützt primär vor Hardwareausfall, nicht vor Löschen, Malware oder logischen Fehlern." }
+              ]
+            }
+          },
+          {
+            id: "kapazitaetsplanung",
+            title: "Kapazitätsplanung",
+            content: {
+              description: "Kapazitätsplanung stellt sicher, dass Speicherbedarf und Performance nachhaltig gedeckt sind.",
+              keyPoints: [
+                "Wachstumsraten, Datenklassen und Retentionsfristen als Basis.",
+                "KPIs: IOPS, Durchsatz, Latenz, Auslastung, Kompressionsquote.",
+                "Headroom (z. B. 20–30 %) gegen Lastspitzen einplanen.",
+                "Tiering: heiße Daten auf schnellen Medien, kalte Daten günstig archivieren.",
+                "Forecasts regelmäßig mit Ist-Daten validieren."
+              ],
+              flashcards: [
+                { q: "Wozu dient Headroom in der Planung?", a: "Für Lastspitzen, Wachstum und unvorhergesehene Anforderungen ohne sofortige Neuanschaffung." },
+                { q: "Was ist Tiering?", a: "Automatisierte oder geplante Verteilung von Daten auf unterschiedliche Speicherebenen." }
+              ]
+            }
+          },
+          {
+            id: "speicheroptimierung",
+            title: "Speicheroptimierung",
+            content: {
+              description: "Optimierung reduziert Kosten und verbessert Performance durch effiziente Datennutzung.",
+              keyPoints: [
+                "Deduplizierung und Komprimierung verringern Nettoverbrauch.",
+                "Thin Provisioning erhöht Auslastung, erfordert aber Monitoring.",
+                "Snapshot-Strategie mit Lebenszyklen verhindert Kapazitätsfresser.",
+                "Dateisystem-/Blockgröße an Workload anpassen.",
+                "Regelmäßige Bereinigung veralteter Daten (Data Lifecycle)."
+              ],
+              flashcards: [
+                { q: "Was ist das Risiko von Thin Provisioning?", a: "Physischer Speicher kann überbucht werden, wenn Wachstum nicht überwacht wird." },
+                { q: "Wann wirkt Deduplizierung besonders gut?", a: "Bei vielen ähnlichen Datenblöcken, etwa in VDI- oder Backup-Umgebungen." }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        id: "datensicherung-wiederherstellung",
+        title: "Datensicherung und Wiederherstellung",
+        lessons: [
+          {
+            id: "backup-strategien",
+            title: "Backup-Strategien",
+            content: {
+              description: "Backup-Strategien richten sich nach Geschäftsanforderungen und Risikoakzeptanz.",
+              keyPoints: [
+                "3-2-1-Regel: 3 Kopien, 2 Medientypen, 1 Kopie extern/offline.",
+                "Voll, inkrementell, differentiell je nach Restore-Zeit und Speicherbedarf.",
+                "Immutable Backups schützen gegen Ransomware-Manipulation.",
+                "RPO/RTO definieren Frequenz und Technologie der Sicherung.",
+                "Regelmäßige Restore-Tests sind Pflicht."
+              ],
+              flashcards: [
+                { q: "Was bedeutet die 3-2-1-Regel?", a: "Drei Datenkopien auf zwei unterschiedlichen Medien, davon eine Kopie extern oder offline." },
+                { q: "Warum sind Restore-Tests unverzichtbar?", a: "Nur so lässt sich nachweisen, dass Backups im Notfall tatsächlich wiederherstellbar sind." }
+              ]
+            }
+          },
+          {
+            id: "wiederherstellung",
+            title: "Wiederherstellung",
+            content: {
+              description: "Wiederherstellung muss technisch vorbereitet und organisatorisch geübt sein.",
+              keyPoints: [
+                "Wiederherstellungsarten: Datei, System, Bare-Metal, anwendungskonsistent.",
+                "Priorisierung kritischer Systeme über Wiederanlaufpläne.",
+                "Runbooks mit klaren Rollen und Kommunikationswegen.",
+                "Failover/Fallback-Szenarien dokumentieren und testen.",
+                "Nachbereitung mit Lessons Learned und Plananpassung."
+              ],
+              flashcards: [
+                { q: "Was ist Bare-Metal-Restore?", a: "Wiederherstellung eines kompletten Systems auf neue oder leere Hardware." },
+                { q: "Was beschreibt RTO?", a: "Die maximal tolerierbare Zeit bis ein Dienst wieder verfügbar sein muss." }
+              ]
+            }
+          },
+          {
+            id: "archivierung",
+            title: "Archivierung",
+            content: {
+              description: "Archivierung dient langfristiger, unveränderbarer Aufbewahrung mit Compliance-Fokus.",
+              keyPoints: [
+                "Abgrenzung zu Backup: Backup = kurzfristige Wiederherstellung, Archiv = Langzeitaufbewahrung.",
+                "WORM-Mechanismen für Unveränderbarkeit und Revisionssicherheit.",
+                "Aufbewahrungsfristen nach rechtlichen und internen Vorgaben.",
+                "Metadaten und Suchbarkeit für Audit- und Auskunftspflichten.",
+                "Löschkonzepte nach Fristablauf definieren."
+              ],
+              flashcards: [
+                { q: "Was bedeutet WORM?", a: "Write Once, Read Many: Daten können nach dem Schreiben nicht mehr verändert werden." },
+                { q: "Warum ist Archivierung nicht gleich Backup?", a: "Archivierung ist auf langfristige, rechtssichere Aufbewahrung ausgelegt, Backup auf schnelle Wiederherstellung." }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        id: "cloud-computing",
+        title: "Cloud Computing",
+        lessons: [
+          {
+            id: "servicemodelle",
+            title: "Servicemodelle",
+            content: {
+              description: "Cloud-Servicemodelle teilen Verantwortlichkeiten zwischen Anbieter und Kunde auf.",
+              keyPoints: [
+                "IaaS, PaaS, SaaS mit jeweils unterschiedlichem Betriebsanteil des Kunden.",
+                "Shared-Responsibility-Modell für Security und Compliance verstehen.",
+                "Managed Services senken Betriebsaufwand, reduzieren aber Gestaltungsspielraum.",
+                "Kostenmodelle (Pay-as-you-go, Reserved) strategisch kombinieren.",
+                "Multi-Cloud erhöht Flexibilität, steigert aber Komplexität."
+              ],
+              flashcards: [
+                { q: "Was verwaltet der Kunde typischerweise bei IaaS?", a: "Betriebssystem, Middleware, Anwendungen und Daten." },
+                { q: "Wofür steht Shared Responsibility?", a: "Sicherheitsaufgaben sind zwischen Cloud-Anbieter und Kunde aufgeteilt." }
+              ]
+            }
+          },
+          {
+            id: "cloud-grundlagen-vorteile",
+            title: "Grundlagen und Vorteile",
+            content: {
+              description: "Cloud ermöglicht schnelle Bereitstellung, Skalierung und standardisierte Betriebsprozesse.",
+              keyPoints: [
+                "On-Demand-Ressourcen verkürzen Time-to-Market.",
+                "Elastische Skalierung deckt Lastspitzen ohne Überprovisionierung.",
+                "Globale Verfügbarkeit durch Regionen/Zonen.",
+                "Automatisierung mit IaC erhöht Reproduzierbarkeit.",
+                "Risiken: Vendor Lock-in, Kostenkontrolle, Datenschutzanforderungen."
+              ],
+              flashcards: [
+                { q: "Was ist ein zentraler Cloud-Vorteil?", a: "Schnelle Bereitstellung und flexible Skalierung entsprechend der Nachfrage." },
+                { q: "Was versteht man unter Vendor Lock-in?", a: "Starke technische/vertragliche Bindung an einen Anbieter, die Wechsel erschwert." }
+              ]
+            }
+          },
+          {
+            id: "cloud-migration",
+            title: "Migration",
+            content: {
+              description: "Cloud-Migration erfordert strukturierte Planung von Workloads, Risiken und Betriebsmodell.",
+              keyPoints: [
+                "Migrationsstrategien: Rehost, Replatform, Refactor, Retire, Retain.",
+                "Abhängigkeiten und Datenflüsse vorab analysieren (Discovery).",
+                "Landing Zone mit Netzwerk, IAM, Logging und Security-Baselines einrichten.",
+                "Pilotmigrationen und Wellenplanung reduzieren Projektrisiken.",
+                "Nachmigration: Performance-, Kosten- und Security-Optimierung (FinOps + SecOps)."
+              ],
+              examTip: "In Konzeptaufgaben punktest du mit einer klaren Migrationsreihenfolge: Analyse → Pilot → Rollout → Betrieb.",
+              flashcards: [
+                { q: "Was bedeutet Rehost in der Cloud-Migration?", a: "Bestehende Systeme werden weitgehend unverändert in die Cloud verschoben (Lift-and-Shift)." },
+                { q: "Warum braucht man eine Landing Zone?", a: "Sie schafft standardisierte Sicherheits-, Netzwerk- und Governance-Grundlagen vor dem Rollout." }
               ]
             }
           }
@@ -657,6 +1037,45 @@ const COURSE_DATA = [
 /* ========================================
    APP LOGIC (Navigation, Render, Storage)
    ======================================== */
+const SUBAGENTS = [
+  {
+    id: "netz-planer",
+    name: "Subagent 1: Netzplaner",
+    icon: "🧭",
+    color: "#3d5af1",
+    focus: "Fokus: Architektur, Segmentierung und Infrastrukturentscheidungen.",
+    missions: [
+      "IP-Adressierung, VLAN und Routing als End-to-End-Design dokumentieren.",
+      "Hardware-, Verkabelungs- und Redundanzkonzepte für Skalierung bewerten.",
+      "Cloud-Migrationspfad inkl. Landing-Zone und Betriebsübergabe skizzieren."
+    ]
+  },
+  {
+    id: "sec-guardian",
+    name: "Subagent 2: Security Guardian",
+    icon: "🛡️",
+    color: "#ef4444",
+    focus: "Fokus: Schutzmaßnahmen, Kryptographie und sichere Betriebsprozesse.",
+    missions: [
+      "TLS/PKI-Standards, Firewall-Regeln und E-Mail-Schutzmechanismen definieren.",
+      "Backup-/Recovery-Ziele (RPO/RTO) und Archivierung revisionssicher auslegen.",
+      "Risikoanalyse mit Zero-Trust, MFA und Least-Privilege als Baseline durchführen."
+    ]
+  },
+  {
+    id: "ops-analyst",
+    name: "Subagent 3: Ops Analyst",
+    icon: "📡",
+    color: "#10b981",
+    focus: "Fokus: Monitoring, Fehleranalyse und kontinuierliche Qualitätsverbesserung.",
+    missions: [
+      "Diagnose- und Protokollanalyse mit Runbooks und klaren Eskalationswegen strukturieren.",
+      "Test- und Debugging-Strategie für Software- und Infrastrukturänderungen anwenden.",
+      "Kapazitätsplanung und Speicheroptimierung anhand realer KPIs nachführen."
+    ]
+  }
+];
+
 const Storage = {
   _data: null,
   _defaults() { return { completed: [], theme: "light" }; },
@@ -708,6 +1127,24 @@ function getStats() {
     return { total, done, percent: total ? Math.round((done/total)*100) : 0 };
 }
 
+
+function renderSubagents() {
+    const grid = document.getElementById("subagentGrid");
+    if (!grid) return;
+    grid.innerHTML = "";
+    SUBAGENTS.forEach(agent => {
+        grid.innerHTML += `
+            <div class="subagent-card">
+                <div class="subagent-head">
+                    <div class="subagent-icon" style="background:${agent.color}20; color:${agent.color}">${agent.icon}</div>
+                    <div class="subagent-name">${agent.name}</div>
+                </div>
+                <div class="subagent-focus">${agent.focus}</div>
+                <ul class="subagent-list">${agent.missions.map(m => `<li>${m}</li>`).join("")}</ul>
+            </div>`;
+    });
+}
+
 function renderDashboard() {
     const stats = getStats();
     document.getElementById("heroPercent").textContent = `${stats.percent}%`;
@@ -719,6 +1156,7 @@ function renderDashboard() {
 
     const grid = document.getElementById("topicProgressGrid");
     grid.innerHTML = "";
+    renderSubagents();
     COURSE_DATA.forEach(topic => {
         let tTotal=0; let tDone=0;
         topic.categories.forEach(c => c.lessons.forEach(l => {
