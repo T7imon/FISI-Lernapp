@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FISI Prüfungstrainer – AP Teil 2</title>
+<style>
+/* ========================================
+   FISI Prüfungstrainer – Stylesheet
+   ======================================== */
+
+:root {
+  --bg-primary: #f5f5f0;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #eeeee8;
+  --bg-sidebar: #1a1a2e;
+  --bg-sidebar-hover: #252542;
+  --text-primary: #1a1a1a;
+  --text-secondary: #5a5a5a;
+  --text-tertiary: #8a8a8a;
+  --text-sidebar: #c8c8d4;
+  --text-sidebar-active: #ffffff;
+  --accent: #3d5af1;
+  --accent-light: #eef0ff;
+  --accent-glow: rgba(61, 90, 241, 0.15);
+  --success: #22c55e;
+  --success-light: #edfcf2;
+  --warning: #f59e0b;
+  --warning-light: #fef9ec;
+  --danger: #ef4444;
+  --danger-light: #fef2f2;
+  --border: #e2e2da;
+  --border-light: #ececec;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,0.08);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --sidebar-w: 260px;
+  --topbar-h: 64px;
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme="dark"] {
+  --bg-primary: #0f0f17;
+  --bg-secondary: #1a1a28;
+  --bg-tertiary: #24243a;
+  --bg-sidebar: #0a0a14;
+  --bg-sidebar-hover: #16162a;
+  --text-primary: #ededf0;
+  --text-secondary: #9999aa;
+  --text-tertiary: #666677;
+  --text-sidebar: #8888aa;
+  --text-sidebar-active: #ffffff;
+  --accent: #6c8aff;
+  --accent-light: #1a1a3a;
+  --accent-glow: rgba(108, 138, 255, 0.12);
+  --success: #34d672;
+  --success-light: #0d2618;
+  --warning: #f5a623;
+  --warning-light: #2a2010;
+  --danger: #f87171;
+  --danger-light: #2a1010;
+  --border: #2a2a40;
+  --border-light: #222238;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body { font-family: var(--font-body); background: var(--bg-primary); color: var(--text-primary); line-height: 1.6; display: flex; min-height: 100vh; overflow-x: hidden; transition: background var(--transition), color var(--transition); }
+
+/* — Sidebar — */
+.sidebar { width: var(--sidebar-w); background: var(--bg-sidebar); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.sidebar-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 20px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.logo { display: flex; align-items: center; gap: 10px; }
+.logo-icon { width: 36px; height: 36px; background: var(--accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.2rem;}
+.logo-text { font-weight: 700; font-size: 1.05rem; color: #fff; }
+.sidebar-close { display: none; background: none; border: none; color: var(--text-sidebar); cursor: pointer; padding: 4px; font-size: 1.2rem;}
+.sidebar-nav { flex: 1; padding: 12px 10px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto;}
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: var(--radius-sm); color: var(--text-sidebar); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: all var(--transition); }
+.nav-item:hover { background: var(--bg-sidebar-hover); color: var(--text-sidebar-active); }
+.nav-item.active { background: var(--accent); color: #fff; }
+.sidebar-footer { padding: 16px 20px 20px; border-top: 1px solid rgba(255,255,255,0.06); }
+.mini-progress-label { font-size: 0.72rem; text-transform: uppercase; color: var(--text-sidebar); margin-bottom: 8px; font-weight: 600; }
+.mini-progress-bar { height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
+.mini-progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.6s; width: 0%; }
+
+/* — Main Content & Topbar — */
+.main-content { flex: 1; margin-left: var(--sidebar-w); min-height: 100vh; transition: margin var(--transition); display: flex; flex-direction: column;}
+.topbar { height: var(--topbar-h); display: flex; align-items: center; gap: 16px; padding: 0 28px; background: var(--bg-secondary); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50; }
+.hamburger { display: none; background: none; border: none; color: var(--text-primary); cursor: pointer; padding: 6px; font-size: 1.2rem;}
+.topbar-search { flex: 1; max-width: 400px; display: flex; align-items: center; gap: 8px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 14px; }
+.topbar-search input { border: none; background: none; outline: none; font-family: var(--font-body); font-size: 0.88rem; color: var(--text-primary); width: 100%; }
+.topbar-actions { display: flex; gap: 8px; margin-left: auto; }
+.theme-toggle { width: 38px; height: 38px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;}
+
+/* — Pages & General Layout — */
+.page-container { padding: 28px; max-width: 1100px; margin: 0 auto; width: 100%; flex: 1;}
+.page { display: none; animation: fadeIn 0.3s ease; }
+.page.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.page-header { margin-bottom: 28px; }
+.page-header h1 { font-size: 1.75rem; font-weight: 700; line-height: 1.2; }
+.page-subtitle { color: var(--text-secondary); margin-top: 6px; font-size: 0.95rem; }
+.section-title { font-size: 1.1rem; font-weight: 600; margin: 32px 0 16px; }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 20px; border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 0.88rem; font-weight: 600; border: none; cursor: pointer; transition: all var(--transition); }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-success { background: var(--success); color: #fff; }
+.btn-secondary { background: var(--bg-primary); color: var(--text-secondary); border: 1px solid var(--border); }
+.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+.btn-danger { background: var(--danger); color: #fff; }
+
+/* Inputs */
+.input-field { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 0.9rem; background: var(--bg-primary); color: var(--text-primary); transition: all 0.2s; }
+.input-field:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+
+/* — Dashboard components — */
+.hero-progress-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 32px; display: flex; align-items: center; gap: 40px; box-shadow: var(--shadow-md); }
+.hero-progress-ring-wrap { position: relative; width: 120px; height: 120px; flex-shrink: 0; }
+.hero-ring { width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring-bg { fill: none; stroke: var(--bg-tertiary); stroke-width: 8; }
+.ring-fill { fill: none; stroke: var(--accent); stroke-width: 8; stroke-linecap: round; stroke-dasharray: 326.73; stroke-dashoffset: 326.73; transition: stroke-dashoffset 1s; }
+.hero-ring-text { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.hero-ring-value { font-size: 1.6rem; font-weight: 700; font-family: var(--font-mono); }
+.hero-stats { display: flex; gap: 32px; flex: 1; }
+.hero-stat-value { font-size: 1.8rem; font-weight: 700; font-family: var(--font-mono); }
+.hero-stat-label { font-size: 0.78rem; color: var(--text-tertiary); font-weight: 500; }
+.topic-progress-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.topic-progress-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 20px; cursor: pointer; transition: all var(--transition); border-bottom: 3px solid transparent;}
+.topic-progress-card:hover { border-color: var(--accent); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.tpc-icon { width: 40px; height: 40px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 12px; }
+.tpc-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 4px; }
+.tpc-bar { height: 6px; background: var(--bg-tertiary); border-radius: 3px; overflow: hidden; margin-top: 12px;}
+.tpc-bar-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.6s; }
+
+/* — Topics & Lessons List — */
+.filter-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px;}
+.chip { padding: 7px 16px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-secondary); font-size: 0.82rem; cursor: pointer; transition: all var(--transition); }
+.chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.topic-group { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 12px; }
+.topic-group-header { display: flex; align-items: center; gap: 14px; padding: 18px 20px; cursor: pointer; }
+.topic-group-icon { width: 38px; height: 38px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+.topic-group-info { flex: 1; }
+.topic-group-title { font-weight: 600; font-size: 0.95rem; }
+.topic-group-progress { width: 60px; height: 6px; background: var(--bg-tertiary); border-radius: 3px; }
+.topic-group-progress-fill { height: 100%; background: var(--accent); }
+.topic-group-body { max-height: 0; overflow: hidden; transition: max-height 0.35s ease; }
+.topic-group.open .topic-group-body { max-height: 2000px; }
+.subtopic-group { border-top: 1px solid var(--border-light); }
+.subtopic-header { display: flex; padding: 12px 20px 12px 36px; cursor: pointer; font-weight: 600; font-size: 0.88rem; color: var(--text-secondary); }
+.subtopic-body { max-height: 0; overflow: hidden; }
+.subtopic-group.open .subtopic-body { max-height: 2000px; }
+.lesson-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px 12px 54px; cursor: pointer; border-top: 1px solid var(--border-light); }
+.lesson-item:hover { background: var(--bg-tertiary); }
+.lesson-checkbox { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.8rem;}
+.lesson-checkbox.checked { background: var(--success); border-color: var(--success); color: white;}
+.lesson-item-info { flex: 1; font-size: 0.88rem; font-weight: 500;}
+
+/* — Lesson View Detailed — */
+.lesson-container { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); }
+.lesson-header { padding: 28px; border-bottom: 1px solid var(--border); }
+.lesson-breadcrumb { font-size: 0.75rem; color: var(--text-tertiary); margin-bottom: 8px; font-weight: 600;}
+.lesson-title { font-size: 1.4rem; font-weight: 700; }
+.lesson-body { padding: 28px; }
+.lesson-section { margin-bottom: 24px; }
+.lesson-section h3 { font-size: 1rem; color: var(--accent); margin-bottom: 10px; }
+.lesson-section p, .lesson-section li { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.7;}
+.lesson-section ul { list-style: none; }
+.lesson-section ul li { padding: 6px 0 6px 20px; position: relative; }
+.lesson-section ul li::before { content: '▸'; position: absolute; left: 0; color: var(--accent); }
+.key-terms { background: var(--accent-light); border-left: 3px solid var(--accent); padding: 16px; margin: 16px 0; border-radius: var(--radius-sm); }
+.exam-tip { background: var(--warning-light); border-left: 3px solid var(--warning); padding: 16px; margin: 16px 0; border-radius: var(--radius-sm); }
+.lesson-footer { padding: 20px 28px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; }
+
+/* — Flashcards — */
+.fc-setup { background: var(--bg-secondary); padding: 24px; border-radius: var(--radius-lg); border: 1px solid var(--border); margin-bottom: 20px; }
+.fc-topic-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 16px; }
+.fc-topic-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 20px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: var(--radius-md); cursor: pointer; transition: all var(--transition); text-align: center;}
+.fc-topic-btn:hover { border-color: var(--accent); box-shadow: var(--shadow-sm); transform: translateY(-2px); }
+.fc-active-session { display: flex; flex-direction: column; align-items: center; margin-top: 20px; }
+.fc-scene { perspective: 1000px; width: 100%; max-width: 600px; height: 350px; margin-bottom: 24px; }
+.fc-card { width: 100%; height: 100%; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; cursor: pointer; position: relative; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); }
+.fc-card.is-flipped { transform: rotateY(180deg); }
+.fc-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; border-radius: var(--radius-lg); border: 2px solid var(--border); text-align: center; overflow-y: auto; }
+.fc-front { background: var(--bg-secondary); color: var(--text-primary); }
+.fc-back { background: var(--accent-light); border-color: var(--accent); color: var(--text-primary); transform: rotateY(180deg); }
+.fc-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); margin-bottom: 16px; font-weight: 700; }
+.fc-text { font-size: 1.1rem; font-weight: 500; line-height: 1.5; }
+
+/* — INTERAKTIVER TRAINER (Rechner) — */
+.trainer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; }
+.trainer-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px; box-shadow: var(--shadow-sm); }
+.trainer-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.trainer-icon { width: 40px; height: 40px; border-radius: var(--radius-sm); background: var(--accent-light); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+.trainer-title { font-size: 1.1rem; font-weight: 700; }
+.trainer-task-box { background: var(--bg-primary); border-left: 4px solid var(--accent); padding: 16px; border-radius: 4px; margin-bottom: 20px; font-family: var(--font-mono); font-size: 0.95rem; }
+.trainer-form { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;}
+.trainer-form-group { display: flex; flex-direction: column; gap: 6px; }
+.trainer-form-group label { font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); }
+.trainer-result { padding: 12px; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.9rem; text-align: center; display: none; margin-top: 12px;}
+.trainer-result.correct { background: var(--success-light); color: var(--success); display: block; border: 1px solid var(--success); }
+.trainer-result.incorrect { background: var(--danger-light); color: var(--danger); display: block; border: 1px solid var(--danger); }
+
+/* Toasts */
+.toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+.toast { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 20px; font-size: 0.85rem; font-weight: 500; box-shadow: var(--shadow-lg); border-left: 3px solid var(--accent); animation: toastIn 0.3s ease;}
+.toast.success { border-left-color: var(--success); }
+.toast.error { border-left-color: var(--danger); }
+
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-close, .hamburger { display: block; }
+  .main-content { margin-left: 0; }
+  .hero-progress-card { flex-direction: column; padding: 24px; text-align: center; }
+  .fc-scene { height: 300px; }
+}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <div class="logo-icon">🔥</div>
+                <span class="logo-text">AP2 Master</span>
+            </div>
+            <button class="sidebar-close" id="sidebarClose">✕</button>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" data-page="dashboard">📊 Dashboard</a>
+            <a href="#" class="nav-item" data-page="topics">📚 Alle Themen</a>
+            <a href="#" class="nav-item" data-page="flashcards">🗂️ Lernkarten</a>
+            <a href="#" class="nav-item" data-page="trainer" style="background: var(--accent-glow); border-left: 3px solid var(--accent);">🧮 Rechen-Trainer</a>
+            <a href="#" class="nav-item" data-page="stats">📈 Statistiken</a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="mini-progress-label">Gesamtfortschritt</div>
+            <div class="mini-progress-bar"><div class="mini-progress-fill" id="sidebarProgress"></div></div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <button class="hamburger" id="hamburger">☰</button>
+            <div class="topbar-search">
+                <input type="text" id="searchInput" placeholder="Themen durchsuchen…">
+            </div>
+            <div class="topbar-actions">
+                <button class="theme-toggle" id="themeToggle">🌓</button>
+            </div>
+        </header>
+
+        <div class="page-container">
+            <section class="page active" id="page-dashboard">
+                <div class="page-header">
+                    <h1>Dein Weg zur Eins 🏆</h1>
+                    <p class="page-subtitle">Bereite dich systematisch auf die IHK-Abschlussprüfung vor.</p>
+                </div>
+                <div class="hero-progress-card">
+                    <div class="hero-progress-ring-wrap">
+                        <svg class="hero-ring" viewBox="0 0 120 120">
+                            <circle cx="60" cy="60" r="52" class="ring-bg"/>
+                            <circle cx="60" cy="60" r="52" class="ring-fill" id="heroRingFill"/>
+                        </svg>
+                        <div class="hero-ring-text">
+                            <span class="hero-ring-value" id="heroPercent">0%</span>
+                        </div>
+                    </div>
+                    <div class="hero-stats">
+                        <div class="hero-stat"><span class="hero-stat-value" id="statCompleted">0</span><span class="hero-stat-label">Erledigt</span></div>
+                        <div class="hero-stat"><span class="hero-stat-value" id="statTotal">0</span><span class="hero-stat-label">Gesamt</span></div>
+                    </div>
+                </div>
+                <h2 class="section-title">Dein Lernfortschritt</h2>
+                <div class="topic-progress-grid" id="topicProgressGrid"></div>
+            </section>
+
+            <section class="page" id="page-topics">
+                <div class="page-header">
+                    <h1>Prüfungsthemen</h1>
+                    <p class="page-subtitle">Alle IHK-relevanten Themenfelder strukturiert aufbereitet.</p>
+                </div>
+                <div class="filter-chips">
+                    <button class="chip active" data-filter="all">Alle</button>
+                    <button class="chip" data-filter="open">Offen</button>
+                    <button class="chip" data-filter="done">Erledigt</button>
+                </div>
+                <div class="topics-list" id="topicsList"></div>
+            </section>
+
+            <section class="page" id="page-flashcards">
+                <div class="page-header">
+                    <h1>Lernkarten 🗂️</h1>
+                    <p class="page-subtitle">Aktiver Wissensabruf für das Langzeitgedächtnis.</p>
+                </div>
+                <div id="fc-setup-view" class="fc-setup">
+                    <h3>Thema auswählen:</h3>
+                    <div class="fc-topic-grid" id="fc-topic-grid"></div>
+                </div>
+                <div id="fc-active-view" class="fc-active-session" style="display:none;">
+                    <button class="btn btn-secondary" style="align-self: flex-start; margin-bottom: 20px;" onclick="stopFlashcards()">← Zurück</button>
+                    <div class="fc-scene" onclick="flipCard()">
+                        <div class="fc-card" id="fc-card">
+                            <div class="fc-face fc-front">
+                                <span class="fc-label">Frage</span>
+                                <div class="fc-text" id="fc-question">...</div>
+                            </div>
+                            <div class="fc-face fc-back">
+                                <span class="fc-label">Antwort</span>
+                                <div class="fc-text" id="fc-answer">...</div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="nextCard()">Nächste Karte ➔</button>
+                </div>
+            </section>
+
+            <section class="page" id="page-trainer">
+                <div class="page-header">
+                    <h1>Rechen-Trainer 🧮</h1>
+                    <p class="page-subtitle">Automatisch generierte Aufgaben für die absoluten IHK-Klassiker.</p>
+                </div>
+                
+                <div class="trainer-grid">
+                    <div class="trainer-card">
+                        <div class="trainer-header">
+                            <div class="trainer-icon">🌐</div>
+                            <div class="trainer-title">IPv4 Subnetting</div>
+                        </div>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px;">Berechne die Basiswerte für die gegebene IP und Subnetzmaske (CIDR).</p>
+                        
+                        <div class="trainer-task-box" id="subnetTaskText">
+                            IP: 192.168.10.50 /26
+                        </div>
+                        
+                        <div class="trainer-form">
+                            <div class="trainer-form-group">
+                                <label>Netz-ID (z.B. 192.168.10.0)</label>
+                                <input type="text" class="input-field" id="subnetInNetwork" placeholder="xxx.xxx.xxx.xxx">
+                            </div>
+                            <div class="trainer-form-group">
+                                <label>Broadcast-IP</label>
+                                <input type="text" class="input-field" id="subnetInBroadcast" placeholder="xxx.xxx.xxx.xxx">
+                            </div>
+                            <div class="trainer-form-group">
+                                <label>Anzahl nutzbarer Hosts</label>
+                                <input type="number" class="input-field" id="subnetInHosts" placeholder="z.B. 62">
+                            </div>
+                        </div>
+                        
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn btn-primary" onclick="checkSubnet()">Prüfen</button>
+                            <button class="btn btn-secondary" onclick="generateSubnetTask()">Neue Aufgabe</button>
+                        </div>
+                        <div class="trainer-result" id="subnetResult"></div>
+                    </div>
+
+                    <div class="trainer-card">
+                        <div class="trainer-header">
+                            <div class="trainer-icon">💾</div>
+                            <div class="trainer-title">RAID Kapazität</div>
+                        </div>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px;">Berechne die Netto-Speicherkapazität des beschriebenen Arrays.</p>
+                        
+                        <div class="trainer-task-box" id="raidTaskText">
+                            RAID 5 Array bestehend aus 4 Festplatten à 2 TB.
+                        </div>
+                        
+                        <div class="trainer-form">
+                            <div class="trainer-form-group">
+                                <label>Netto-Kapazität (in TB)</label>
+                                <input type="number" class="input-field" id="raidInCap" placeholder="Nur die Zahl (z.B. 6)">
+                            </div>
+                        </div>
+                        
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn btn-primary" onclick="checkRaid()">Prüfen</button>
+                            <button class="btn btn-secondary" onclick="generateRaidTask()">Neue Aufgabe</button>
+                        </div>
+                        <div class="trainer-result" id="raidResult"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="page" id="page-lesson">
+                <button class="back-btn" id="backToTopics">← Zurück zur Übersicht</button>
+                <div class="lesson-container" id="lessonContainer"></div>
+            </section>
+
+            <section class="page" id="page-stats">
+                <div class="page-header">
+                    <h1>Statistiken 📈</h1>
+                </div>
+                <div style="background:var(--bg-secondary); padding: 40px; border-radius:var(--radius-lg); text-align:center; border:1px solid var(--border);">
+                    <p style="color:var(--text-secondary); font-size:1.1rem;">Lerne konsequent, der Balken füllt sich von allein.</p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+<script>
+/* ========================================
+   MASTER DATA (COURSE_DATA)
+   Vollständig optimiert für AP Teil 2
+   ======================================== */
+const COURSE_DATA = [
+  {
+    id: "netzwerke",
+    title: "Netzwerke & Fehlersuche",
+    icon: "🌐",
+    color: "#3d5af1",
+    categories: [
+      {
+        id: "troubleshooting",
+        title: "Diagnose & Fehlersuche",
+        lessons: [
+          {
+            id: "osi-troubleshooting",
+            title: "Fehlersuche nach OSI",
+            content: {
+              description: "Die strukturierte Fehlersuche entlang des OSI-Modells ist ein Kernthema der IHK-Prüfung.",
+              keyPoints: [
+                "Layer 1 (Physical): Kabel, Stecker, LEDs prüfen.",
+                "Layer 2 (Data Link): VLANs, MAC-Adressen, STP-Zustände prüfen.",
+                "Layer 3 (Network): IP-Konfiguration, Subnetzmaske, Default Gateway prüfen (ping, tracert).",
+                "Layer 7 (Application): Dienste, Ports, DNS-Auflösung (nslookup) prüfen."
+              ],
+              examTip: "In fast jeder AP gibt es eine Aufgabe, in der du die Ausgabe von 'ping' (Latenzen, Timeouts) oder 'nslookup' interpretieren musst.",
+              keyTerms: "OSI-Modell | ping | tracert | nslookup",
+              flashcards: [
+                { q: "Wie gehst du bei der Fehlersuche nach dem OSI-Modell vor?", a: "Entweder Bottom-Up (von Layer 1 aufwärts) oder Top-Down (von Layer 7 abwärts), um Fehlerquellen systematisch einzugrenzen." },
+                { q: "Was bedeutet die Fehlermeldung 'Non-existent domain' bei nslookup?", a: "Der angefragte DNS-Name existiert nicht auf dem autoritativen Nameserver (Eintrag fehlt oder Tippfehler)." },
+                { q: "Wofür nutzt man tracert (bzw. traceroute)?", a: "Um den Routing-Pfad (Hops) eines IP-Pakets zum Ziel zu verfolgen und herauszufinden, an welchem Router die Verbindung abbricht." }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        id: "netz-basics",
+        title: "Infrastruktur & Sicherheit",
+        lessons: [
+          {
+            id: "subnetting-vlan",
+            title: "IP, Subnetting & VLAN",
+            content: {
+              description: "Die absolute Basis. Subnetting und VLAN-Konzepte müssen blind sitzen.",
+              keyPoints: [
+                "IPv4 Subnetting (inkl. VLSM zur effizienten Adressnutzung).",
+                "IPv6 Grundlagen und SLAAC.",
+                "VLAN: Access-Port (ein VLAN, ungetaggt) vs. Trunk-Port (mehrere VLANs, 802.1Q getaggt).",
+                "Inter-VLAN-Routing benötigt Layer-3-Geräte (Router oder L3-Switch)."
+              ],
+              flashcards: [
+                { q: "Was ist der Unterschied zwischen einem Access-Port und einem Trunk-Port?", a: "Access-Port: Gehört zu genau einem VLAN (für Endgeräte). Trunk-Port: Überträgt den Traffic mehrerer VLANs mittels 802.1Q Tags (oft zwischen Switches)." },
+                { q: "Welche Funktion hat ein DHCP-Relay?", a: "Es leitet DHCP-Broadcasts (DORA-Prozess) aus einem Subnetz an einen zentralen DHCP-Server in einem anderen Subnetz weiter." }
+              ]
+            }
+          },
+          {
+            id: "fw-vpn",
+            title: "Firewalls & VPN",
+            content: {
+              description: "Absicherung von Netzwerken durch Firewalls und sichere Tunnel.",
+              keyPoints: [
+                "Stateful Firewall (merkt sich Verbindungsstatus) vs. Next Gen Firewall (NGFW - inkl. SSL Inspection, IPS).",
+                "Allow-List-Prinzip: Alles verbieten, nur explizit Benötigtes erlauben.",
+                "Hybride Verschlüsselung bei TLS/SSL: Asymmetrisch für Schlüsselaustausch, Symmetrisch für Daten."
+              ],
+              flashcards: [
+                { q: "Was ist der wesentliche Vorteil einer hybriden Verschlüsselung (z.B. bei TLS)?", a: "Sie nutzt asymmetrische Verschlüsselung für den sicheren, initialen Schlüsselaustausch und die schnelle symmetrische Verschlüsselung für die eigentliche Datenübertragung." },
+                { q: "Erkläre das 'Allow-List' (Whitelist) Prinzip bei Firewalls.", a: "Es ist pauschal alles verboten (Default Deny), was nicht durch eine explizite Regel erlaubt wurde. Bietet höchste Sicherheit." }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: "it-systeme",
+    title: "IT-Systeme & Administration",
+    icon: "🖥️",
+    color: "#10b981",
+    categories: [
+      {
+        id: "sys-storage",
+        title: "Speicher & Backup",
+        lessons: [
+          {
+            id: "raid-concept",
+            title: "RAID & Speicherkonzepte",
+            content: {
+              description: "Kapazitätsberechnungen und Ausfallsicherheit von Festplatten.",
+              keyPoints: [
+                "RAID 1: Spiegelung (50% Verlust).",
+                "RAID 5: Striping mit Parität (1 Platte Redundanz).",
+                "RAID 6: Striping mit doppelter Parität (2 Platten Redundanz).",
+                "RAID 10: Striping über gespiegelte Sets (Hohe Performance, 50% Verlust)."
+              ],
+              examTip: "Lerne die Netto-Kapazitätsformeln: RAID 5 = (n-1)*Größe. RAID 6 = (n-2)*Größe.",
+              flashcards: [
+                { q: "Wie viel Netto-Kapazität bietet ein RAID 5 aus 4 Festplatten à 2 TB?", a: "6 TB. Rechnung: (4 - 1) * 2 TB = 6 TB. Eine Platte geht für Paritätsdaten verloren." },
+                { q: "Was ist der Unterschied zwischen NAS und SAN?", a: "NAS (Network Attached Storage) stellt Speicher auf Dateiebene (File-Level) bereit. SAN (Storage Area Network) stellt Speicher auf Blockebene (Block-Level) bereit, oft über Fibre Channel oder iSCSI." }
+              ]
+            }
+          },
+          {
+            id: "backup-strategy",
+            title: "Backup & Archivierung",
+            content: {
+              description: "Rücksicherungskonzepte und rechtliche Vorgaben.",
+              keyPoints: [
+                "Vollbackup (setzt Archivbit), Differentiell (liest Archivbit, ändert es nicht), Inkrementell (setzt Archivbit zurück).",
+                "RTO (Recovery Time Objective): Wie lange darf ein System ausfallen?",
+                "RPO (Recovery Point Objective): Wie viel Datenverlust ist tolerierbar?",
+                "Archivierung: Revisionssicher, unveränderbar (WORM), langzeit."
+              ],
+              flashcards: [
+                { q: "Welche Bänder benötigst du für einen Restore, wenn am Montag voll und Di-Fr inkrementell gesichert wurde (Ausfall am Freitagmittag)?", a: "Das Vollbackup vom Montag PLUS alle inkrementellen Backups von Dienstag, Mittwoch und Donnerstag." },
+                { q: "Was bedeutet Revisionssicherheit bei der Archivierung?", a: "Daten müssen nachvollziehbar, vollständig und unveränderbar (Write Once Read Many - WORM) gespeichert werden." }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        id: "sys-windows",
+        title: "Windows Server & Cloud",
+        lessons: [
+          {
+            id: "ad-gpo",
+            title: "Active Directory & GPOs",
+            content: {
+              description: "Verwaltung von Windows-Infrastrukturen.",
+              keyPoints: [
+                "Domain Controller authentifiziert Benutzer (Kerberos).",
+                "OUs (Organizational Units) strukturieren das AD logisch.",
+                "GPOs (Group Policy Objects) erzwingen Einstellungen."
+              ],
+              flashcards: [
+                { q: "Was ist ein Domain Controller (DC)?", a: "Ein zentraler Server, der das Active Directory (AD) hostet und für die Authentifizierung sowie Autorisierung im Netzwerk zuständig ist." },
+                { q: "In welcher Reihenfolge werden GPOs angewendet (LSDOU)?", a: "Local -> Site -> Domain -> OU. Die zuletzt angewendete Richtlinie (z.B. OU) gewinnt bei Konflikten." }
+              ]
+            }
+          },
+          {
+            id: "cloud-models",
+            title: "Cloud Servicemodelle",
+            content: {
+              description: "IaaS, PaaS, SaaS - Die Basics.",
+              keyPoints: [
+                "IaaS: Infrastruktur (Hardware, Netz) wird bereitgestellt. OS verwaltet der Kunde.",
+                "PaaS: Plattform (OS, Laufzeitumgebung) bereitgestellt. Code verwaltet der Kunde.",
+                "SaaS: Komplette Software (z.B. Microsoft 365) als Dienst."
+              ],
+              flashcards: [
+                { q: "Erkläre das IaaS (Infrastructure as a Service) Modell.", a: "Der Anbieter stellt Hardware-Ressourcen (Server, Storage, Netzwerk) virtuell bereit. Der Kunde installiert und verwaltet das Betriebssystem sowie Anwendungen." },
+                { q: "Was ist der Unterschied zwischen Virtualisierung und Containerisierung?", a: "Virtualisierung simuliert komplette Hardware inkl. eigenem Gast-OS. Container teilen sich den Kernel des Host-OS und sind extrem leichtgewichtig und schnell startbar." }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: "prozesse",
+    title: "Prozessanalyse & PM",
+    icon: "⚙️",
+    color: "#8b5cf6",
+    categories: [
+      {
+        id: "pm-bpmn",
+        title: "BPMN & Projektmanagement",
+        lessons: [
+          {
+            id: "bpmn-basics",
+            title: "BPMN 2.0 Modellierung",
+            content: {
+              description: "Geschäftsprozesse standardisiert visualisieren.",
+              keyPoints: [
+                "Pools und Swimlanes zeigen Zuständigkeiten.",
+                "XOR-Gateway (Exklusiv-Oder): Entweder der eine oder der andere Weg.",
+                "AND-Gateway (Parallel): Beide Wege werden gleichzeitig ausgeführt.",
+                "OR-Gateway (Inklusiv): Einer oder mehrere Wege, je nach Bedingung."
+              ],
+              examTip: "Die Gateways werden IMMER abgefragt. Lerne die genauen Unterschiede zwischen XOR, AND und OR.",
+              flashcards: [
+                { q: "Was macht ein XOR-Gateway in BPMN?", a: "Es teilt den Prozessfluss an einer Entscheidung auf. Nur exakt EIN ausgehender Pfad darf gewählt werden (Entweder-Oder)." },
+                { q: "Was stellt ein UML-Use-Case-Diagramm (Anwendungsfalldiagramm) dar?", a: "Es zeigt, WELCHE Funktionen (Use Cases) ein System aus Sicht der Benutzer (Akteure) bietet, ohne den genauen technischen Ablauf zu zeigen." }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: "wiso",
+    title: "Wirtschafts- und Sozialkunde",
+    icon: "📈",
+    color: "#f5a623",
+    categories: [
+      {
+        id: "wiso-recht",
+        title: "Arbeitsrecht & Verträge",
+        lessons: [
+          {
+            id: "arbeitsvertrag",
+            title: "Kündigung & Mutterschutz",
+            content: {
+              description: "Wichtige gesetzliche Rahmenbedingungen für Arbeitnehmer.",
+              keyPoints: [
+                "Kündigungsgründe: Personen-, verhaltens-, betriebsbedingt.",
+                "Gesetzliche Kündigungsfrist (BGB §622): 4 Wochen zum 15. oder Monatsende.",
+                "Mutterschutz: Absolutes Beschäftigungsverbot 6 Wochen vor und 8 Wochen nach der Entbindung."
+              ],
+              flashcards: [
+                { q: "Welche drei Arten von Kündigungsgründen kennt das KSchG?", a: "Personenbedingt (z.B. Langzeiterkrankung), Verhaltensbedingt (z.B. Diebstahl, unentschuldigtes Fehlen) und Betriebsbedingt (z.B. Abteilungsschließung)." },
+                { q: "Was regelt ein Manteltarifvertrag im Gegensatz zum Lohntarifvertrag?", a: "Der Manteltarifvertrag regelt allgemeine Bedingungen (Urlaubstage, Arbeitszeiten, Kündigungsfristen). Der Lohntarifvertrag regelt ausschließlich die Vergütung." }
+              ]
+            }
+          },
+          {
+            id: "sozial-orga",
+            title: "Sozialversicherung & Rechtsformen",
+            content: {
+              description: "Wie Unternehmen und Absicherungen funktionieren.",
+              keyPoints: [
+                "Die 5 Zweige der Sozialversicherung (Kranken, Pflege, Renten, Arbeitslosen, Unfall).",
+                "Unfallversicherung zahlt ALLEIN der Arbeitgeber.",
+                "Rechtsformen: GmbH (beschränkte Haftung, mind. 25.000€ Stammkapital), OHG (Vollhaftung)."
+              ],
+              flashcards: [
+                { q: "Welche der gesetzlichen Sozialversicherungen wird alleinig vom Arbeitgeber bezahlt?", a: "Die gesetzliche Unfallversicherung. Träger sind die Berufsgenossenschaften." },
+                { q: "Wer haftet bei einer GmbH?", a: "Ausschließlich die Gesellschaft mit dem Gesellschaftsvermögen. Die Gesellschafter haften nicht mit ihrem Privatvermögen." }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+];
+
+/* ========================================
+   APP LOGIC (Navigation, Render, Storage)
+   ======================================== */
+const Storage = {
+  _data: null,
+  _defaults() { return { completed: [], theme: "light" }; },
+  load() { try { const r = localStorage.getItem("ap2-master"); this._data = r ? {...this._defaults(), ...JSON.parse(r)} : this._defaults(); } catch { this._data = this._defaults(); } },
+  save() { localStorage.setItem("ap2-master", JSON.stringify(this._data)); },
+  get data() { if (!this._data) this.load(); return this._data; },
+  toggleLesson(id) {
+    if(this.data.completed.includes(id)) {
+      this.data.completed = this.data.completed.filter(x => x !== id);
+    } else {
+      this.data.completed.push(id);
+    }
+    this.save();
+  },
+  isCompleted(id) { return this.data.completed.includes(id); }
+};
+
+function navigateTo(pageId) {
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+    document.getElementById(`page-${pageId}`).classList.add("active");
+    
+    document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+    const navItem = document.querySelector(`.nav-item[data-page="${pageId}"]`);
+    if (navItem) navItem.classList.add("active");
+
+    if (pageId === "dashboard") renderDashboard();
+    if (pageId === "topics") renderTopics("all");
+    if (pageId === "flashcards") renderFlashcardSetup();
+    if (pageId === "trainer") { generateSubnetTask(); generateRaidTask(); }
+    
+    window.scrollTo({ top: 0 });
+}
+
+function showToast(msg, type = "info") {
+    const cont = document.getElementById("toastContainer");
+    const t = document.createElement("div");
+    t.className = `toast ${type}`;
+    t.textContent = msg;
+    cont.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
+}
+
+function getStats() {
+    let total = 0; let done = 0;
+    COURSE_DATA.forEach(t => t.categories.forEach(c => c.lessons.forEach(l => {
+        total++;
+        if(Storage.isCompleted(l.id)) done++;
+    })));
+    return { total, done, percent: total ? Math.round((done/total)*100) : 0 };
+}
+
+function renderDashboard() {
+    const stats = getStats();
+    document.getElementById("heroPercent").textContent = `${stats.percent}%`;
+    const offset = 326.73 - (326.73 * stats.percent / 100);
+    document.getElementById("heroRingFill").style.strokeDashoffset = offset;
+    document.getElementById("statCompleted").textContent = stats.done;
+    document.getElementById("statTotal").textContent = stats.total;
+    document.getElementById("sidebarProgress").style.width = `${stats.percent}%`;
+
+    const grid = document.getElementById("topicProgressGrid");
+    grid.innerHTML = "";
+    COURSE_DATA.forEach(topic => {
+        let tTotal=0; let tDone=0;
+        topic.categories.forEach(c => c.lessons.forEach(l => {
+            tTotal++; if(Storage.isCompleted(l.id)) tDone++;
+        }));
+        let pct = tTotal ? Math.round((tDone/tTotal)*100) : 0;
+        grid.innerHTML += `
+            <div class="topic-progress-card" onclick="navigateTo('topics')" style="border-bottom-color: ${pct===100 ? 'var(--success)' : 'transparent'}">
+                <div class="tpc-icon" style="background:${topic.color}20; color:${topic.color}">${topic.icon}</div>
+                <div class="tpc-title">${topic.title}</div>
+                <div style="font-size:0.8rem; color:var(--text-tertiary)">${tDone} von ${tTotal} Lektionen</div>
+                <div class="tpc-bar"><div class="tpc-bar-fill" style="width:${pct}%; background:${pct===100 ? 'var(--success)' : topic.color}"></div></div>
+            </div>`;
+    });
+}
+
+function renderTopics(filter="all") {
+    const list = document.getElementById("topicsList");
+    list.innerHTML = "";
+    COURSE_DATA.forEach(topic => {
+        let html = `<div class="topic-group open">
+            <div class="topic-group-header">
+                <div class="topic-group-icon" style="background:${topic.color}20; color:${topic.color}">${topic.icon}</div>
+                <div class="topic-group-title">${topic.title}</div>
+            </div><div class="topic-group-body">`;
+        
+        let hasContent = false;
+        topic.categories.forEach(cat => {
+            let catHtml = `<div class="subtopic-group open"><div class="subtopic-header">${cat.title}</div><div class="subtopic-body">`;
+            let hasLesson = false;
+            cat.lessons.forEach(l => {
+                const done = Storage.isCompleted(l.id);
+                if(filter === "done" && !done) return;
+                if(filter === "open" && done) return;
+                hasLesson = true; hasContent = true;
+                catHtml += `
+                    <div class="lesson-item" onclick="openLesson('${l.id}')">
+                        <div class="lesson-checkbox ${done ? 'checked':''}" onclick="event.stopPropagation(); toggleLesson('${l.id}')">✓</div>
+                        <div class="lesson-item-info">${l.title}</div>
+                    </div>`;
+            });
+            catHtml += `</div></div>`;
+            if(hasLesson) html += catHtml;
+        });
+        html += `</div></div>`;
+        if(hasContent) list.innerHTML += html;
+    });
+}
+
+function toggleLesson(id) {
+    Storage.toggleLesson(id);
+    renderTopics(document.querySelector(".chip.active").dataset.filter);
+    renderDashboard();
+}
+
+function openLesson(id) {
+    let lesson, topicTitle;
+    COURSE_DATA.forEach(t => t.categories.forEach(c => c.lessons.forEach(l => {
+        if(l.id === id) { lesson = l; topicTitle = t.title; }
+    })));
+    if(!lesson) return;
+
+    const c = lesson.content;
+    const isDone = Storage.isCompleted(id);
+    document.getElementById("lessonContainer").innerHTML = `
+        <div class="lesson-header">
+            <div class="lesson-breadcrumb">${topicTitle}</div>
+            <div class="lesson-title">${lesson.title}</div>
+        </div>
+        <div class="lesson-body">
+            <div class="lesson-section"><p>${c.description}</p></div>
+            <div class="lesson-section"><h3>Wichtige Punkte</h3><ul>${c.keyPoints.map(p=>`<li>${p}</li>`).join("")}</ul></div>
+            ${c.examTip ? `<div class="exam-tip"><h4>💡 Prüfungstipp</h4><p>${c.examTip}</p></div>` : ""}
+            <div class="lesson-footer">
+                <button class="btn ${isDone ? 'btn-secondary' : 'btn-success'}" onclick="toggleLesson('${id}'); openLesson('${id}')">
+                    ${isDone ? "Als offen markieren" : "✓ Als erledigt markieren"}
+                </button>
+            </div>
+        </div>
+    `;
+    document.getElementById("backToTopics").onclick = () => navigateTo("topics");
+    
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+    document.getElementById("page-lesson").classList.add("active");
+    window.scrollTo(0,0);
+}
+
+/* ========================================
+   FLASHCARDS
+   ======================================== */
+let fcCards = [];
+let fcIdx = 0;
+
+function renderFlashcardSetup() {
+    const grid = document.getElementById("fc-topic-grid");
+    grid.innerHTML = `<div class="fc-topic-btn" onclick="startFC('all')"><div style="font-size:2rem">📚</div><div style="font-weight:bold; margin-top:10px;">Alle Themen mixen</div></div>`;
+    COURSE_DATA.forEach(t => {
+        let count = 0;
+        t.categories.forEach(c => c.lessons.forEach(l => { if(l.content.flashcards) count += l.content.flashcards.length; }));
+        if(count > 0) {
+            grid.innerHTML += `<div class="fc-topic-btn" onclick="startFC('${t.id}')"><div style="font-size:2rem">${t.icon}</div><div style="font-weight:bold; margin-top:10px;">${t.title}</div><div style="font-size:0.8rem; color:var(--text-tertiary)">${count} Karten</div></div>`;
+        }
+    });
+}
+
+function startFC(topicId) {
+    fcCards = []; fcIdx = 0;
+    COURSE_DATA.forEach(t => {
+        if(topicId === 'all' || t.id === topicId) {
+            t.categories.forEach(c => c.lessons.forEach(l => {
+                if(l.content.flashcards) fcCards.push(...l.content.flashcards);
+            }));
+        }
+    });
+    fcCards.sort(() => Math.random() - 0.5); // Shuffle
+    document.getElementById("fc-setup-view").style.display = "none";
+    document.getElementById("fc-active-view").style.display = "flex";
+    updateFC();
+}
+
+function stopFlashcards() {
+    document.getElementById("fc-setup-view").style.display = "block";
+    document.getElementById("fc-active-view").style.display = "none";
+}
+
+function flipCard() { document.getElementById("fc-card").classList.toggle("is-flipped"); }
+
+function nextCard() {
+    document.getElementById("fc-card").classList.remove("is-flipped");
+    setTimeout(() => {
+        fcIdx++;
+        if(fcIdx >= fcCards.length) { showToast("Deck abgeschlossen!", "success"); fcIdx=0; fcCards.sort(() => Math.random() - 0.5); }
+        updateFC();
+    }, 200);
+}
+
+function updateFC() {
+    document.getElementById("fc-question").innerHTML = fcCards[fcIdx].q;
+    document.getElementById("fc-answer").innerHTML = fcCards[fcIdx].a;
+}
+
+/* ========================================
+   INTERAKTIVER TRAINER (Rechner)
+   ======================================== */
+
+// Subnetting State
+let curSub = { ip: "", cidr: 0, net: "", bcast: "", hosts: 0 };
+
+function intToIp(int) {
+    return [ (int >>> 24) & 255, (int >>> 16) & 255, (int >>> 8) & 255, int & 255 ].join('.');
+}
+function ipToInt(ip) {
+    return ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet, 10), 0) >>> 0;
+}
+
+function generateSubnetTask() {
+    // Generate valid Class C for easy but realistic training (/24 to /29)
+    const baseIp = `192.168.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*256)}`;
+    const cidr = Math.floor(Math.random() * (29 - 24 + 1)) + 24;
+    
+    curSub.ip = baseIp;
+    curSub.cidr = cidr;
+    
+    const ipInt = ipToInt(baseIp);
+    const hostBits = 32 - cidr;
+    const maskInt = (0xFFFFFFFF << hostBits) >>> 0;
+    
+    const netInt = (ipInt & maskInt) >>> 0;
+    const bcastInt = (netInt | ~maskInt) >>> 0;
+    
+    curSub.net = intToIp(netInt);
+    curSub.bcast = intToIp(bcastInt);
+    curSub.hosts = Math.pow(2, hostBits) - 2;
+
+    document.getElementById("subnetTaskText").textContent = `IP: ${curSub.ip} /${curSub.cidr}`;
+    document.getElementById("subnetInNetwork").value = "";
+    document.getElementById("subnetInBroadcast").value = "";
+    document.getElementById("subnetInHosts").value = "";
+    document.getElementById("subnetResult").className = "trainer-result";
+}
+
+function checkSubnet() {
+    const net = document.getElementById("subnetInNetwork").value.trim();
+    const bcast = document.getElementById("subnetInBroadcast").value.trim();
+    const hosts = parseInt(document.getElementById("subnetInHosts").value.trim());
+
+    const resBox = document.getElementById("subnetResult");
+    if (net === curSub.net && bcast === curSub.bcast && hosts === curSub.hosts) {
+        resBox.textContent = "Korrekt! Perfekt gelöst.";
+        resBox.className = "trainer-result correct";
+    } else {
+        resBox.innerHTML = `Fehler.<br>Richtig wäre:<br>Netz-ID: ${curSub.net}<br>Broadcast: ${curSub.bcast}<br>Hosts: ${curSub.hosts}`;
+        resBox.className = "trainer-result incorrect";
+    }
+}
+
+// RAID State
+let curRaid = { level: 0, disks: 0, size: 0, cap: 0 };
+
+function generateRaidTask() {
+    const levels = [1, 5, 6, 10];
+    const sizes = [1, 2, 4, 8, 10];
+    
+    curRaid.level = levels[Math.floor(Math.random() * levels.length)];
+    curRaid.size = sizes[Math.floor(Math.random() * sizes.length)];
+    
+    if (curRaid.level === 1) curRaid.disks = 2;
+    else if (curRaid.level === 5) curRaid.disks = Math.floor(Math.random() * 4) + 3; // 3 to 6
+    else if (curRaid.level === 6) curRaid.disks = Math.floor(Math.random() * 3) + 4; // 4 to 6
+    else if (curRaid.level === 10) curRaid.disks = [4, 6, 8][Math.floor(Math.random() * 3)];
+
+    // Calculate Capacity
+    if (curRaid.level === 1) curRaid.cap = curRaid.size;
+    else if (curRaid.level === 5) curRaid.cap = (curRaid.disks - 1) * curRaid.size;
+    else if (curRaid.level === 6) curRaid.cap = (curRaid.disks - 2) * curRaid.size;
+    else if (curRaid.level === 10) curRaid.cap = (curRaid.disks / 2) * curRaid.size;
+
+    document.getElementById("raidTaskText").textContent = `Ein Server benötigt ein RAID ${curRaid.level}. Verbaut werden ${curRaid.disks} Festplatten, jede mit einer Kapazität von ${curRaid.size} TB.`;
+    document.getElementById("raidInCap").value = "";
+    document.getElementById("raidResult").className = "trainer-result";
+}
+
+function checkRaid() {
+    const input = parseFloat(document.getElementById("raidInCap").value.trim());
+    const resBox = document.getElementById("raidResult");
+    
+    if (input === curRaid.cap) {
+        resBox.textContent = "Korrekt! Richtig gerechnet.";
+        resBox.className = "trainer-result correct";
+    } else {
+        resBox.innerHTML = `Leider falsch. Die Netto-Kapazität beträgt ${curRaid.cap} TB.`;
+        resBox.className = "trainer-result incorrect";
+    }
+}
+
+/* ========================================
+   INIT
+   ======================================== */
+document.addEventListener("DOMContentLoaded", () => {
+    Storage.load();
+    document.documentElement.setAttribute("data-theme", Storage.data.theme);
+    
+    document.querySelectorAll(".chip").forEach(c => c.onclick = (e) => {
+        document.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));
+        e.target.classList.add("active");
+        renderTopics(e.target.dataset.filter);
+    });
+
+    document.getElementById("themeToggle").onclick = () => {
+        const next = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", next);
+        Storage.data.theme = next; Storage.save();
+    };
+
+    document.querySelectorAll(".nav-item").forEach(item => {
+        item.onclick = (e) => { e.preventDefault(); navigateTo(item.dataset.page); }
+    });
+    
+    // Mobile Sidebar
+    document.getElementById("hamburger").onclick = () => document.getElementById("sidebar").classList.add("open");
+    document.getElementById("sidebarClose").onclick = () => document.getElementById("sidebar").classList.remove("open");
+
+    navigateTo("dashboard");
+});
+</script>
+</body>
+</html>
