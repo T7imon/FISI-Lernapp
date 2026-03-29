@@ -209,17 +209,6 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
 
 
 
-/* — Lern-Subagenten — */
-.subagent-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
-.subagent-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 18px; box-shadow: var(--shadow-sm); }
-.subagent-head { display:flex; align-items:center; gap:10px; margin-bottom: 8px; }
-.subagent-icon { width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.05rem; }
-.subagent-name { font-size:0.95rem; font-weight:700; }
-.subagent-focus { font-size:0.82rem; color: var(--text-secondary); margin-bottom:10px; }
-.subagent-list { list-style:none; }
-.subagent-list li { font-size:0.82rem; color: var(--text-secondary); margin:4px 0; padding-left: 14px; position: relative; }
-.subagent-list li::before { content: '•'; position:absolute; left:0; color: var(--accent); }
-
 /* Toasts */
 .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
 .toast { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 20px; font-size: 0.85rem; font-weight: 500; box-shadow: var(--shadow-lg); border-left: 3px solid var(--accent); animation: toastIn 0.3s ease;}
@@ -294,8 +283,6 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
                 </div>
                 <h2 class="section-title">Dein Lernfortschritt</h2>
                 <div class="topic-progress-grid" id="topicProgressGrid"></div>
-                <h2 class="section-title">3 Lern-Subagenten (Fokuspfade)</h2>
-                <div class="subagent-grid" id="subagentGrid"></div>
             </section>
 
             <section class="page" id="page-topics">
@@ -1037,45 +1024,6 @@ const COURSE_DATA = [
 /* ========================================
    APP LOGIC (Navigation, Render, Storage)
    ======================================== */
-const SUBAGENTS = [
-  {
-    id: "netz-planer",
-    name: "Subagent 1: Netzplaner",
-    icon: "🧭",
-    color: "#3d5af1",
-    focus: "Fokus: Architektur, Segmentierung und Infrastrukturentscheidungen.",
-    missions: [
-      "IP-Adressierung, VLAN und Routing als End-to-End-Design dokumentieren.",
-      "Hardware-, Verkabelungs- und Redundanzkonzepte für Skalierung bewerten.",
-      "Cloud-Migrationspfad inkl. Landing-Zone und Betriebsübergabe skizzieren."
-    ]
-  },
-  {
-    id: "sec-guardian",
-    name: "Subagent 2: Security Guardian",
-    icon: "🛡️",
-    color: "#ef4444",
-    focus: "Fokus: Schutzmaßnahmen, Kryptographie und sichere Betriebsprozesse.",
-    missions: [
-      "TLS/PKI-Standards, Firewall-Regeln und E-Mail-Schutzmechanismen definieren.",
-      "Backup-/Recovery-Ziele (RPO/RTO) und Archivierung revisionssicher auslegen.",
-      "Risikoanalyse mit Zero-Trust, MFA und Least-Privilege als Baseline durchführen."
-    ]
-  },
-  {
-    id: "ops-analyst",
-    name: "Subagent 3: Ops Analyst",
-    icon: "📡",
-    color: "#10b981",
-    focus: "Fokus: Monitoring, Fehleranalyse und kontinuierliche Qualitätsverbesserung.",
-    missions: [
-      "Diagnose- und Protokollanalyse mit Runbooks und klaren Eskalationswegen strukturieren.",
-      "Test- und Debugging-Strategie für Software- und Infrastrukturänderungen anwenden.",
-      "Kapazitätsplanung und Speicheroptimierung anhand realer KPIs nachführen."
-    ]
-  }
-];
-
 const Storage = {
   _data: null,
   _defaults() { return { completed: [], theme: "light" }; },
@@ -1128,22 +1076,7 @@ function getStats() {
 }
 
 
-function renderSubagents() {
-    const grid = document.getElementById("subagentGrid");
-    if (!grid) return;
-    grid.innerHTML = "";
-    SUBAGENTS.forEach(agent => {
-        grid.innerHTML += `
-            <div class="subagent-card">
-                <div class="subagent-head">
-                    <div class="subagent-icon" style="background:${agent.color}20; color:${agent.color}">${agent.icon}</div>
-                    <div class="subagent-name">${agent.name}</div>
-                </div>
-                <div class="subagent-focus">${agent.focus}</div>
-                <ul class="subagent-list">${agent.missions.map(m => `<li>${m}</li>`).join("")}</ul>
-            </div>`;
-    });
-}
+
 
 function renderDashboard() {
     const stats = getStats();
@@ -1156,7 +1089,6 @@ function renderDashboard() {
 
     const grid = document.getElementById("topicProgressGrid");
     grid.innerHTML = "";
-    renderSubagents();
     COURSE_DATA.forEach(topic => {
         let tTotal=0; let tDone=0;
         topic.categories.forEach(c => c.lessons.forEach(l => {
