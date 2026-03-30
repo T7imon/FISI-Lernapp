@@ -1,5 +1,5 @@
-const CACHE_NAME = "fisi-lernapp-v1";
-const APP_SHELL = ["./", "./code", "./manifest.json"];
+const CACHE_NAME = "fisi-lernapp-v2";
+const APP_SHELL = ["./", "./index.html", "./manifest.json"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -36,7 +36,7 @@ self.addEventListener("fetch", (event) => {
             .catch(() => {});
           return networkResponse;
         })
-        .catch(() => caches.match("./code"));
+        .catch(() => caches.match("./index.html"));
     })
   );
 });
