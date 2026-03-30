@@ -223,7 +223,8 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
 .fc-front { background: var(--bg-secondary); color: var(--text-primary); transform: rotateY(0deg) translateZ(1px); z-index: 2; }
 .fc-back { background: var(--accent-light); border-color: var(--accent); color: var(--text-primary); transform: rotateY(180deg) translateZ(1px); }
 .fc-back-content { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; flex: 1; }
-.fc-back-actions { width: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding-top: 16px; border-top: 1px solid var(--border); margin-top: 16px; }
+.fc-back-actions { width: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding-top: 16px; border-top: 1px solid var(--border); margin-top: 16px; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+.fc-back-actions.is-visible { opacity: 1; pointer-events: all; }
 .fc-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); margin-bottom: 16px; font-weight: 700; }
 .fc-text { font-size: 1.1rem; font-weight: 500; line-height: 1.5; }
 
@@ -396,7 +397,7 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
                                     <span class="fc-label">Antwort</span>
                                     <div class="fc-text" id="fc-answer">...</div>
                                 </div>
-                                <div class="fc-back-actions">
+                                <div id="fc-actions" class="fc-back-actions">
                                     <button class="btn btn-danger" id="fc-rate-repeat" onclick="event.stopPropagation(); rateCurrentCard('repeat')" disabled>↺ Wiederholen</button>
                                     <button class="btn btn-warning" id="fc-rate-good" onclick="event.stopPropagation(); rateCurrentCard('good')" disabled>✓ Gut</button>
                                     <button class="btn btn-success" id="fc-rate-easy" onclick="event.stopPropagation(); rateCurrentCard('easy')" disabled>⭐ Einfach</button>
@@ -405,9 +406,6 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
                             </div>
                         </button>
                     </div>
-                    <p style="margin-top:10px; color:var(--text-secondary); font-size:0.85rem;">
-                        Tipp: Erst Karte umdrehen, dann Schwierigkeit bewerten.
-                    </p>
                 </div>
             </section>
 
@@ -2331,6 +2329,11 @@ function setRatingButtonsEnabled(isEnabled) {
     });
 }
 
+function setFlashcardActionsVisibility(isVisible) {
+    const actions = document.getElementById("fc-actions");
+    if (actions) actions.classList.toggle("is-visible", isVisible);
+}
+
 function renderFlashcardSetup() {
     const grid = document.getElementById("fc-topic-grid");
     grid.innerHTML = `<button class="fc-topic-btn" type="button" onclick="startFC('all')"><div style="font-size:2rem">📚</div><div style="font-weight:bold; margin-top:10px;">Alle Themen mixen</div></button>`;
@@ -2382,14 +2385,17 @@ function stopFlashcards() {
 }
 
 function flipCard() {
-    document.getElementById("fc-card").classList.toggle("is-flipped");
-    const isFlipped = document.getElementById("fc-card").classList.contains("is-flipped");
+    const card = document.getElementById("fc-card");
+    card.classList.toggle("is-flipped");
+    const isFlipped = card.classList.contains("is-flipped");
     setRatingButtonsEnabled(isFlipped);
+    setFlashcardActionsVisibility(isFlipped);
 }
 
 function goToNextCard() {
     document.getElementById("fc-card").classList.remove("is-flipped");
     setRatingButtonsEnabled(false);
+    setFlashcardActionsVisibility(false);
     setTimeout(() => {
         fcIdx++;
         if(fcIdx >= fcCards.length) {
@@ -2443,11 +2449,14 @@ function updateFC() {
         document.getElementById("fc-question").textContent = "Keine Lernkarten verfügbar.";
         document.getElementById("fc-answer").textContent = "Bitte anderes Thema auswählen.";
         setRatingButtonsEnabled(false);
+        setFlashcardActionsVisibility(false);
         return;
     }
     document.getElementById("fc-question").innerHTML = fcCards[fcIdx].q;
     document.getElementById("fc-answer").innerHTML = fcCards[fcIdx].a;
+    document.getElementById("fc-card").classList.remove("is-flipped");
     setRatingButtonsEnabled(false);
+    setFlashcardActionsVisibility(false);
 }
 
 
