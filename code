@@ -1514,6 +1514,212 @@ Get-PSDrive -PSProvider FileSystem |
   }
 ];
 
+const FLASHCARD_TARGET_PER_LESSON = 12;
+
+const FLASHCARD_RULES = {
+  "tls-ssl": [
+    { q: "Welcher Port wird standardmäßig für HTTPS genutzt?", a: "TCP 443." },
+    { q: "Was ist der Hauptzweck des TLS-Handshakes?", a: "Aushandeln von Parametern, Authentifizierung und Aufbau gemeinsamer Sitzungsschlüssel." },
+    { q: "Warum sind TLS 1.0/1.1 heute problematisch?", a: "Sie gelten als veraltet und erfüllen aktuelle Sicherheitsanforderungen häufig nicht mehr." },
+    { q: "Was bedeutet Perfect Forward Secrecy in der Praxis?", a: "Selbst bei späterem Schlüsselleak bleiben alte Sitzungen nicht nachträglich entschlüsselbar." }
+  ],
+  "ip-adressierung": [
+    { q: "Wie viele Adressen umfasst ein /24-Netz?", a: "256 Adressen insgesamt." },
+    { q: "Welche privaten IPv4-Bereiche sind prüfungsrelevant?", a: "10.0.0.0/8, 172.16.0.0/12 und 192.168.0.0/16." },
+    { q: "Warum ist VLSM in Unternehmensnetzen wichtig?", a: "Weil Teilnetze bedarfsgerecht dimensioniert und Adressen effizient genutzt werden." },
+    { q: "Wozu dient ein Default-Gateway?", a: "Es leitet Pakete in andere Netze weiter, wenn kein lokaler Zielhost vorhanden ist." }
+  ],
+  "raid": [
+    { q: "Warum schützt RAID 5 nicht vor Ransomware?", a: "Weil Verschlüsselungen/Änderungen sofort konsistent auf alle Platten geschrieben werden." },
+    { q: "Welche minimale Plattenzahl benötigt RAID 5?", a: "Drei Festplatten." },
+    { q: "Welche minimale Plattenzahl benötigt RAID 10?", a: "Vier Festplatten." },
+    { q: "Was ist ein zentraler Nachteil von RAID 0?", a: "Keine Redundanz: Fällt eine Platte aus, sind alle Daten des Verbunds betroffen." }
+  ],
+  "ldap-ad-basics": [
+    { q: "Welcher Port wird standardmäßig für LDAPS genutzt?", a: "TCP 636." },
+    { q: "Wofür steht LDAP?", a: "Lightweight Directory Access Protocol." },
+    { q: "Wofür steht das Kürzel AD im Microsoft-Umfeld?", a: "Active Directory." },
+    { q: "Warum sollte für LDAP-Anmeldungen TLS genutzt werden?", a: "Damit Anmeldedaten und Verzeichnisabfragen vertraulich übertragen werden." }
+  ],
+  "dhcp": [
+    { q: "Wofür steht DHCP?", a: "Dynamic Host Configuration Protocol." },
+    { q: "Wie heißt der klassische DHCP-Ablauf bei IPv4?", a: "DORA: Discover, Offer, Request, Acknowledge." },
+    { q: "Warum ist ein DHCP-Relay-Agent in gerouteten Netzen wichtig?", a: "Broadcasts werden nicht geroutet; der Relay-Agent leitet DHCP-Anfragen an den Server weiter." }
+  ],
+  "dns": [
+    { q: "Welche Aufgabe hat ein A-Record?", a: "Zuordnung eines Hostnamens zu einer IPv4-Adresse." },
+    { q: "Wofür wird ein AAAA-Record genutzt?", a: "Zuordnung eines Hostnamens zu einer IPv6-Adresse." },
+    { q: "Warum kann eine zu hohe TTL bei Änderungen problematisch sein?", a: "Resolver behalten veraltete Einträge länger im Cache." }
+  ]
+};
+
+const SPECIAL_FLASHCARD_DECKS = {
+  id: "ihk-drill-down",
+  title: "IHK Drill-Down Decks",
+  icon: "🎯",
+  color: "#7c3aed",
+  categories: [
+    {
+      id: "port-training",
+      title: "Port-Training",
+      lessons: [
+        {
+          id: "port-training-core",
+          title: "Ports, Protokolle und typische Einsatzzwecke",
+          content: {
+            description: "Schnelles Zuordnen von Diensten zu Standardports für AP2-Aufgaben.",
+            keyPoints: [
+              "SSH 22, HTTP 80, HTTPS 443, DNS 53, SMTP 25.",
+              "IMAP 143/993, POP3 110/995, LDAP 389/636, RDP 3389.",
+              "Kerberos 88, NTP 123, SNMP 161/162, DHCP 67/68.",
+              "Ports immer mit Transportprotokoll (TCP/UDP) denken."
+            ],
+            flashcards: [
+              { q: "Welcher Port gehört zu SSH?", a: "TCP 22." },
+              { q: "Welcher Port gehört zu HTTP?", a: "TCP 80." },
+              { q: "Welcher Port gehört zu HTTPS?", a: "TCP 443." },
+              { q: "Welcher Port gehört zu DNS?", a: "TCP/UDP 53 (typisch UDP für Anfragen, TCP für Zone-Transfer/große Antworten)." },
+              { q: "Welcher Port gehört zu SMTP?", a: "TCP 25 (Submission oft 587)." },
+              { q: "Welcher Port gehört zu IMAPS?", a: "TCP 993." },
+              { q: "Welcher Port gehört zu POP3S?", a: "TCP 995." },
+              { q: "Welcher Port gehört zu LDAPS?", a: "TCP 636." },
+              { q: "Welcher Port gehört zu RDP?", a: "TCP 3389." },
+              { q: "Welcher Port gehört zu NTP?", a: "UDP 123." },
+              { q: "Welcher Port gehört zu SNMP?", a: "UDP 161 (Traps: 162)." },
+              { q: "Warum ist die Portkenntnis allein für Security nicht ausreichend?", a: "Dienste können auf Nicht-Standardports laufen; zusätzlich sind Protokollprüfung und Kontext nötig." }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      id: "cli-training",
+      title: "Linux/Windows Konsolenbefehle",
+      lessons: [
+        {
+          id: "cli-befehle-core",
+          title: "Befehls-Drills für Betrieb und Troubleshooting",
+          content: {
+            description: "Kompakte Zuordnung typischer Befehle zu ihrem Zweck.",
+            keyPoints: [
+              "Netzwerkdiagnose unter Windows und Linux beherrschen.",
+              "Datei-/Prozessbefehle sicher anwenden.",
+              "Ausgaben lesen und korrekt interpretieren."
+            ],
+            flashcards: [
+              { q: "Welcher Windows-Befehl zeigt die lokale IP-Konfiguration?", a: "ipconfig (detailliert: ipconfig /all)." },
+              { q: "Welcher Linux-Befehl zeigt IP-Adressen moderner Systeme?", a: "ip addr." },
+              { q: "Welcher Befehl prüft die Erreichbarkeit eines Hosts?", a: "ping." },
+              { q: "Womit verfolgst du den Pfad von Paketen im Netzwerk?", a: "tracert (Windows) bzw. traceroute (Linux)." },
+              { q: "Welcher Befehl zeigt aktive Verbindungen und Ports unter Linux?", a: "ss -tulpen (oder netstat auf älteren Systemen)." },
+              { q: "Welcher Befehl listet laufende Prozesse unter Linux?", a: "ps aux (interaktiv: top/htop)." },
+              { q: "Welcher PowerShell-Befehl ist das moderne Pendant zu ipconfig?", a: "Get-NetIPAddress (ergänzend Get-NetIPConfiguration)." },
+              { q: "Mit welchem Linux-Befehl suchst du Text in Dateien?", a: "grep." },
+              { q: "Welcher Windows-Befehl testet DNS-Auflösung schnell?", a: "nslookup." },
+              { q: "Wie leerst du den DNS-Cache unter Windows?", a: "ipconfig /flushdns." },
+              { q: "Warum ist 'sudo' sicherheitsrelevant?", a: "Es ermöglicht privilegierte Aktionen gezielt und protokollierbar statt dauerhaft als root zu arbeiten." },
+              { q: "Transferfrage: Ein Dienst ist erreichbar, aber Name nicht auflösbar. Was prüfst du zuerst?", a: "DNS-Eintrag, DNS-Serverkonfiguration des Clients und ob die Auflösung mit nslookup/dig funktioniert." }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      id: "subnetting-training",
+      title: "Subnetting-Regeln",
+      lessons: [
+        {
+          id: "subnetting-regeln-core",
+          title: "Subnetting-Drill für AP2",
+          content: {
+            description: "Schnellrechnen mit CIDR, Hostzahlen und Blockgrößen.",
+            keyPoints: [
+              "Hostformel: 2^(Hostbits) - 2 (IPv4 Standardfall).",
+              "Blockgröße über interessantes Oktett berechnen.",
+              "Netz-, Host- und Broadcastadresse sicher bestimmen."
+            ],
+            flashcards: [
+              { q: "Wie viele nutzbare Hosts bietet /26?", a: "62 Hosts." },
+              { q: "Wie viele nutzbare Hosts bietet /28?", a: "14 Hosts." },
+              { q: "Welche Maske hat /27?", a: "255.255.255.224." },
+              { q: "Welche Maske hat /23?", a: "255.255.254.0." },
+              { q: "Wie viele Adressen enthält ein /30-Netz?", a: "4 Adressen insgesamt, davon 2 nutzbar." },
+              { q: "Was ist die Blockgröße bei 255.255.255.192?", a: "64." },
+              { q: "Warum ist /31 auf Punkt-zu-Punkt-Links verbreitet?", a: "Weil dort keine klassische Broadcast-Nutzung nötig ist und Adressen gespart werden." },
+              { q: "Was ist bei /32 besonders?", a: "Es adressiert genau einen einzelnen Host (Hostroute)." },
+              { q: "Transferfrage: Für 50 Hosts pro Segment – welches Präfix passt?", a: "/26, weil 62 nutzbare Hosts verfügbar sind." },
+              { q: "Transferfrage: Für 500 Hosts – reicht /24?", a: "Nein, /24 hat nur 254 nutzbare Hosts; mindestens /23 nötig." },
+              { q: "Wie lautet die Grundidee von VLSM?", a: "Unterschiedlich große Subnetze passend zum tatsächlichen Bedarf." },
+              { q: "Warum führt falsches Subnetting zu Kommunikationsfehlern?", a: "Hosts bewerten Ziele dann fälschlich als lokal/remote und senden Pakete an den falschen Pfad." }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+};
+
+function ensureRichFlashcards() {
+  if (!COURSE_DATA.some(topic => topic.id === SPECIAL_FLASHCARD_DECKS.id)) {
+    COURSE_DATA.push(SPECIAL_FLASHCARD_DECKS);
+  }
+
+  COURSE_DATA.forEach(topic => {
+    topic.categories.forEach(category => {
+      category.lessons.forEach(lesson => {
+        const content = lesson.content || {};
+        const existing = Array.isArray(content.flashcards) ? content.flashcards : [];
+        const seen = new Set(existing.map(card => `${card.q}|||${card.a}`));
+
+        const inject = (card) => {
+          const key = `${card.q}|||${card.a}`;
+          if (seen.has(key)) return;
+          existing.push(card);
+          seen.add(key);
+        };
+
+        (FLASHCARD_RULES[lesson.id] || []).forEach(inject);
+
+        (content.keyPoints || []).forEach((point, idx) => {
+          inject({
+            q: `Nenne den Kernpunkt ${idx + 1} aus '${lesson.title}'.`,
+            a: point
+          });
+          inject({
+            q: `Transfer: Welche praktische Auswirkung hat in '${lesson.title}' folgender Aspekt: ${point}`,
+            a: `Er beeinflusst Planung, Betrieb und Fehlersuche direkt und sollte in der Lösung konkret auf den Use-Case bezogen werden.`
+          });
+        });
+
+        if (content.keyTerms) {
+          inject({
+            q: `Welche Abkürzungen/Begriffe solltest du in '${lesson.title}' sicher definieren können?`,
+            a: content.keyTerms
+          });
+        }
+
+        inject({
+          q: `Prüfungsstrategie: Wie beantwortest du Transferfragen zu '${lesson.title}'?`,
+          a: `Nicht nur definieren: Ausgangslage nennen, technische Entscheidung begründen, Risiken/Folgen und eine passende Maßnahme darstellen.`
+        });
+
+        while (existing.length < FLASHCARD_TARGET_PER_LESSON) {
+          const idx = existing.length + 1;
+          inject({
+            q: `Vertiefung ${idx}: Welcher typische Fehler tritt bei '${lesson.title}' häufig auf und wie vermeidest du ihn?`,
+            a: `Typisch sind fehlende Dokumentation, falsche Annahmen oder unvollständige Tests. Gegenmaßnahmen: Checklisten, Vier-Augen-Prinzip und standardisierte Validierung.`
+          });
+        }
+
+        content.flashcards = existing;
+      });
+    });
+  });
+}
+
+ensureRichFlashcards();
+
+
 /* ========================================
    APP LOGIC (Navigation, Render, Storage)
    ======================================== */
