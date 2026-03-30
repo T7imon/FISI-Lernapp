@@ -1709,20 +1709,67 @@ const SPECIAL_FLASHCARD_DECKS = {
   ]
 };
 
+const TERM_EXPLANATIONS = [
+  { pattern: /Paketfilter/i, definition: "**Paketfilter (OSI Layer 3/4)** entscheiden pro Paket anhand von Quell-/Ziel-IP, Protokoll (TCP/UDP/ICMP) und Port. Sie kennen keinen Verbindungszustand – jedes Paket wird isoliert bewertet." },
+  { pattern: /Stateful Inspection/i, definition: "**Stateful Inspection** führt eine State-Table. Antworten auf erlaubte Verbindungen werden dynamisch zugelassen, ohne für jedes Rückpaket eine separate Regel zu pflegen." },
+  { pattern: /Application\/Next-Gen Firewall|Next-Gen Firewall|Application Firewall/i, definition: "**Application-/Next-Gen-Firewalls (Layer 7)** analysieren Inhalte bis zur Anwendungsebene (z. B. HTTP, DNS, TLS-Metadaten) und erkennen auch unerwünschte Nutzung auf 'erlaubten' Ports wie 443." },
+  { pattern: /Default-Deny/i, definition: "**Default-Deny** heißt: Standardmäßig alles blockieren und nur explizit freigegebene Kommunikation erlauben. Das reduziert Fehlfreigaben und Angriffsfläche." },
+  { pattern: /DMZ/i, definition: "Die **DMZ (Demilitarized Zone)** ist ein separates Netz für öffentlich erreichbare Systeme (z. B. Reverse Proxy, Webserver, Mail-Gateway). Bei Kompromittierung bleibt das interne LAN besser geschützt." },
+  { pattern: /WAN/i, definition: "**WAN** ist das externe/unsichere Netz (typisch Internet oder Provider-Strecke). Regeln von WAN nach intern sind besonders restriktiv zu gestalten." },
+  { pattern: /LAN/i, definition: "**LAN** ist das interne Unternehmensnetz mit Clients/Servern. Zugriffe aus anderen Zonen sollten nach Least-Privilege freigegeben werden." },
+  { pattern: /IDS\/IPS|IPS|IDS/i, definition: "**IDS/IPS** erkennen bzw. blockieren Angriffsmuster. IDS meldet Ereignisse, IPS kann aktiv Pakete verwerfen oder Sessions trennen." },
+  { pattern: /Egress/i, definition: "**Egress-Filter** kontrollieren ausgehenden Traffic. Sie verhindern Datenabfluss und erschweren Command-and-Control-Verbindungen kompromittierter Systeme." },
+  { pattern: /TLS/i, definition: "**TLS** schützt Vertraulichkeit, Integrität und Authentizität. Für Betriebssicherheit sind aktuelle Versionen (v. a. TLS 1.2/1.3), saubere Zertifikate und Cipher-Härtung entscheidend." },
+  { pattern: /DNS/i, definition: "**DNS** übersetzt Namen in IP-Adressen (und umgekehrt via PTR). Fehler in Delegation, TTL oder Resolver-Konfiguration verursachen häufig Betriebsstörungen." },
+  { pattern: /DHCP/i, definition: "**DHCP** verteilt IP-Parameter automatisiert (IPv4: DORA). In gerouteten Netzen wird meist ein DHCP-Relay eingesetzt, da Broadcasts Routergrenzen nicht passieren." },
+  { pattern: /NAT|PAT/i, definition: "**NAT/PAT** übersetzt private Adressen auf öffentliche Erreichbarkeit. Wichtig für AP2: NAT ist Adressübersetzung, aber kein Ersatz für Security-Policies." },
+  { pattern: /VLAN/i, definition: "**VLANs** trennen Layer-2-Broadcast-Domänen logisch. Kommunikation zwischen VLANs braucht Layer-3-Routing und sollte per ACL/Firewall geregelt werden." },
+  { pattern: /OSPF|BGP|Routing|Route/i, definition: "**Routing** entscheidet anhand Routingtabelle und Präfixlänge (Longest Prefix Match), über welchen Next Hop Pakete in andere Netze gelangen." },
+  { pattern: /QoS|DSCP|RTP|SIP/i, definition: "**QoS/Realtime-Verkehr** priorisiert latenzkritische Pakete (z. B. Sprache via RTP). Typische Zielwerte: geringe Latenz, niedriger Jitter, minimaler Paketverlust." }
+];
+
+function buildDetailedExplanation(point = "") {
+  const cleaned = String(point || "").trim().replace(/\.$/, "");
+  if (!cleaned) return "";
+
+  const matches = TERM_EXPLANATIONS
+    .filter(item => item.pattern.test(cleaned))
+    .map(item => `- ${item.definition}`);
+
+  const normalizedPoint = cleaned.endsWith(".") ? cleaned : `${cleaned}.`;
+  const base = `- **Kernaussage:** ${normalizedPoint}`;
+
+  if (!matches.length) {
+    return [
+      base,
+      "- **Einordnung:** Zerlege den Begriff in *Definition*, *Funktionsweise* und *betriebliche Auswirkung*. Erst dann ist er prüfungstauglich.",
+      "- **Praxisbezug:** Beschreibe immer, welche Systeme betroffen sind, welche Schnittstellen/Protokolle genutzt werden und welches Risiko ohne Maßnahme entsteht."
+    ].join("\n");
+  }
+
+  return [
+    base,
+    "- **Technische Erklärung:**",
+    ...matches,
+    "- **Praxisbezug:** In der IHK-Situation immer mit konkretem Datenfluss argumentieren (Quelle → Ziel → Port/Protokoll → erlauben/blockieren)."
+  ].join("\n");
+}
+
 function buildLegacyLessonSections(lessonTitle, keyPoints = []) {
   const normalized = keyPoints
     .map(point => String(point || "").trim())
-    .filter(Boolean)
-    .map(point => point.endsWith(".") ? point : `${point}.`);
+    .filter(Boolean);
 
   if (!normalized.length) return null;
 
-  const introPoints = normalized.slice(0, 2).join(" ");
-  const practicePoints = normalized.slice(2).join(" ");
+  const deepDive = normalized
+    .map((point, idx) => `#### ${idx + 1}. ${point.replace(/:.*$/, "").trim() || `Aspekt ${idx + 1}`}\n${buildDetailedExplanation(point)}`)
+    .join("\n\n");
 
   return {
-    warum_und_zusammenhang: `Bei **${lessonTitle}** geht es nicht um isolierte Fachbegriffe, sondern um nachvollziehbare Entscheidungen im Betrieb. ${introPoints}`,
-    praxis_und_pruefungsbezug: `Im Betriebsalltag nutzt du dieses Wissen für Planung, Betrieb und Fehlersuche. ${practicePoints} In der AP2 punktest du, wenn du jeweils **Ausgangslage → Begründung → konkrete Maßnahme** strukturierst.`
+    definition_und_funktionsweise: `### **Definition & technische Funktionsweise**\nBei **${lessonTitle}** reicht es in AP2 nicht, Begriffe nur zu nennen. Du musst zeigen, *wie* das Konzept arbeitet und *warum* es im Betrieb benötigt wird.\n\n${deepDive}`,
+    praxis_ihk_szenario: `### **Praxis-How-To (IHK-Szenario)**\n1. **Ausgangslage erfassen:** Welche Systeme kommunizieren? In welcher Zone/Netzsegment liegen sie?\n2. **Technischen Pfad beschreiben:** Quelle, Ziel, Port/Protokoll, OSI-Ebene und beteiligte Sicherheitsmechanismen.\n3. **Regel/Maßnahme begründen:** Warum ist die Freigabe/Änderung nötig und wie wird das Risiko begrenzt (Least Privilege, Segmentierung, Monitoring)?\n4. **Wirksamkeit prüfen:** Testfall mit Soll-Ergebnis definieren (z. B. Zugriff erlaubt, unerlaubter Pfad blockiert, Log-Eintrag vorhanden).`,
+    warnhinweise_und_troubleshooting: `### **Warnhinweise & Troubleshooting**\n- **Häufiger Fehler:** Begriffe aufzählen ohne Datenfluss oder technische Ursache zu erklären.\n- **Betriebsregel:** Änderungen immer dokumentieren (Change, Ticket, Rückfallplan).\n- **Troubleshooting-Check:** DNS-Auflösung, Routingpfad, Portfreigaben, Zustands-/Session-Tabellen, Logs, Zeitquelle (NTP), Zertifikatsstatus.\n- **Merksatz für AP2:** Eine gute Antwort enthält immer **Definition → Funktionsweise → Praxisbeispiel → Risikoabsicherung**.`
   };
 }
 
@@ -1768,7 +1815,7 @@ function upgradeLegacyCourseContent() {
 
         if (hasLegacyKeyPoints) {
           if (!content.descriptionMarkdown && content.description) {
-            content.descriptionMarkdown = `${content.description} **Warum ist das relevant?** Weil du in AP2-Aufgaben technische Entscheidungen begründen und in einen betrieblichen Kontext einordnen musst.`;
+            content.descriptionMarkdown = `**Lernziel:** ${content.description}\n\nIn dieser Lektion werden alle Kernbegriffe nicht nur genannt, sondern mit **Definition**, **Funktionsweise**, **OSI-/Protokollbezug** und **IHK-Praxisfall** erklärt. Ziel ist, dass du das Thema anschließend in eigenen Worten herleiten und auf eine Prüfungssituation übertragen kannst.`;
           }
 
           if (!content.sections) {
