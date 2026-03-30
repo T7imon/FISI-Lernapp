@@ -1709,6 +1709,93 @@ const SPECIAL_FLASHCARD_DECKS = {
   ]
 };
 
+function buildLegacyLessonSections(lessonTitle, keyPoints = []) {
+  const normalized = keyPoints
+    .map(point => String(point || "").trim())
+    .filter(Boolean)
+    .map(point => point.endsWith(".") ? point : `${point}.`);
+
+  if (!normalized.length) return null;
+
+  const introPoints = normalized.slice(0, 2).join(" ");
+  const practicePoints = normalized.slice(2).join(" ");
+
+  return {
+    warum_und_zusammenhang: `Bei **${lessonTitle}** geht es nicht um isolierte Fachbegriffe, sondern um nachvollziehbare Entscheidungen im Betrieb. ${introPoints}`,
+    praxis_und_pruefungsbezug: `Im Betriebsalltag nutzt du dieses Wissen für Planung, Betrieb und Fehlersuche. ${practicePoints} In der AP2 punktest du, wenn du jeweils **Ausgangslage → Begründung → konkrete Maßnahme** strukturierst.`
+  };
+}
+
+function normalizeFlashcardQuestion(question = "") {
+  const q = String(question).trim();
+  if (!q) return q;
+  if (/^Nenne\s+/i.test(q)) {
+    return q.replace(/^Nenne\s+/i, "Welche ").replace(/\.$/, "") + "?";
+  }
+  return q;
+}
+
+function auditLegacyLessons() {
+  const legacyLessons = [];
+  COURSE_DATA.forEach(topic => {
+    topic.categories.forEach(category => {
+      category.lessons.forEach(lesson => {
+        if (Array.isArray(lesson?.content?.keyPoints) && lesson.content.keyPoints.length > 0) {
+          legacyLessons.push({
+            topic: topic.title,
+            category: category.title,
+            lessonId: lesson.id,
+            lessonTitle: lesson.title
+          });
+        }
+      });
+    });
+  });
+  return legacyLessons;
+}
+
+function upgradeLegacyCourseContent() {
+  const legacyAudit = auditLegacyLessons();
+  if (legacyAudit.length) {
+    console.info(`[Content-Audit] ${legacyAudit.length} Lektionen im Legacy-Format gefunden und auf Rich-Content migriert.`, legacyAudit);
+  }
+
+  COURSE_DATA.forEach(topic => {
+    topic.categories.forEach(category => {
+      category.lessons.forEach(lesson => {
+        const content = lesson.content || {};
+        const hasLegacyKeyPoints = Array.isArray(content.keyPoints) && content.keyPoints.length > 0;
+
+        if (hasLegacyKeyPoints) {
+          if (!content.descriptionMarkdown && content.description) {
+            content.descriptionMarkdown = `${content.description} **Warum ist das relevant?** Weil du in AP2-Aufgaben technische Entscheidungen begründen und in einen betrieblichen Kontext einordnen musst.`;
+          }
+
+          if (!content.sections) {
+            content.sections = buildLegacyLessonSections(lesson.title, content.keyPoints);
+          }
+
+          if (!content.examTip) {
+            content.examTip = "IHK-Strategie: Nicht nur definieren, sondern immer Problem, technische Begründung und konkrete Umsetzungsmaßnahme nennen.";
+          }
+
+          delete content.keyPoints;
+          delete content.description;
+        }
+
+        if (Array.isArray(content.flashcards)) {
+          content.flashcards = content.flashcards.map(card => ({
+            ...card,
+            q: normalizeFlashcardQuestion(card.q)
+          }));
+        }
+
+        lesson.content = content;
+      });
+    });
+  });
+}
+
 function ensureRichFlashcards() {
   if (!COURSE_DATA.some(topic => topic.id === SPECIAL_FLASHCARD_DECKS.id)) {
     COURSE_DATA.push(SPECIAL_FLASHCARD_DECKS);
@@ -1748,6 +1835,7 @@ function ensureRichFlashcards() {
   });
 }
 
+upgradeLegacyCourseContent();
 ensureRichFlashcards();
 
 
