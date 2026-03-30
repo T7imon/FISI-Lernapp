@@ -132,8 +132,17 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
 .hero-stat-value { font-size: 1.8rem; font-weight: 700; font-family: var(--font-mono); }
 .hero-stat-label { font-size: 0.78rem; color: var(--text-tertiary); font-weight: 500; }
 .topic-progress-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-.topic-progress-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 20px; cursor: pointer; transition: all var(--transition); border-bottom: 3px solid transparent;}
+.topic-progress-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 20px; cursor: pointer; transition: all var(--transition); border-bottom: 3px solid transparent; width: 100%; display: block; text-align: left; font: inherit; color: inherit;}
 .topic-progress-card:hover { border-color: var(--accent); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.topic-progress-card:focus-visible,
+.lesson-item:focus-visible,
+.fc-topic-btn:focus-visible,
+.fc-card:focus-visible,
+.topic-group-header:focus-visible,
+.subtopic-header:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
 .tpc-icon { width: 40px; height: 40px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 12px; }
 .tpc-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 4px; }
 .tpc-bar { height: 6px; background: var(--bg-tertiary); border-radius: 3px; overflow: hidden; margin-top: 12px;}
@@ -158,7 +167,7 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
 .subtopic-group.open .subtopic-body { max-height: 2000px; }
 .lesson-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px 12px 54px; cursor: pointer; border-top: 1px solid var(--border-light); }
 .lesson-item:hover { background: var(--bg-tertiary); }
-.lesson-checkbox { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.8rem;}
+.lesson-checkbox { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; background: transparent; cursor: pointer; font-family: inherit; padding: 0; }
 .lesson-checkbox.checked { background: var(--success); border-color: var(--success); color: white;}
 .lesson-item-info { flex: 1; font-size: 0.88rem; font-weight: 500;}
 
@@ -185,7 +194,7 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
 .fc-topic-btn:hover { border-color: var(--accent); box-shadow: var(--shadow-sm); transform: translateY(-2px); }
 .fc-active-session { display: flex; flex-direction: column; align-items: center; margin-top: 20px; }
 .fc-scene { perspective: 1000px; width: 100%; max-width: 600px; height: 350px; margin-bottom: 24px; }
-.fc-card { width: 100%; height: 100%; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; cursor: pointer; position: relative; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); }
+.fc-card { width: 100%; height: 100%; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; cursor: pointer; position: relative; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border: none; background: none; padding: 0; font: inherit; color: inherit; text-align: inherit; }
 .fc-card.is-flipped { transform: rotateY(180deg); }
 .fc-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; border-radius: var(--radius-lg); border: 2px solid var(--border); text-align: center; overflow-y: auto; }
 .fc-front { background: var(--bg-secondary); color: var(--text-primary); }
@@ -318,8 +327,8 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
                 </div>
                 <div id="fc-active-view" class="fc-active-session" style="display:none;">
                     <button class="btn btn-secondary" style="align-self: flex-start; margin-bottom: 20px;" onclick="stopFlashcards()">← Zurück</button>
-                    <div class="fc-scene" onclick="flipCard()">
-                        <div class="fc-card" id="fc-card">
+                    <div class="fc-scene">
+                        <button class="fc-card" id="fc-card" type="button" aria-label="Lernkarte umdrehen" onclick="flipCard()">
                             <div class="fc-face fc-front">
                                 <span class="fc-label">Frage</span>
                                 <div class="fc-text" id="fc-question">...</div>
@@ -328,7 +337,7 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
                                 <span class="fc-label">Antwort</span>
                                 <div class="fc-text" id="fc-answer">...</div>
                             </div>
-                        </div>
+                        </button>
                     </div>
                     <button class="btn btn-primary" onclick="nextCard()">Nächste Karte ➔</button>
                 </div>
@@ -1138,6 +1147,12 @@ function getActiveTopicFilter() {
     return document.querySelector(".chip.active")?.dataset.filter || "all";
 }
 
+function activateOnKey(event, callback) {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    callback();
+}
+
 
 
 function renderDashboard() {
@@ -1158,12 +1173,12 @@ function renderDashboard() {
         }));
         let pct = tTotal ? Math.round((tDone/tTotal)*100) : 0;
         grid.innerHTML += `
-            <div class="topic-progress-card" onclick="navigateTo('topics')" style="border-bottom-color: ${pct===100 ? 'var(--success)' : 'transparent'}">
+            <button class="topic-progress-card" type="button" onclick="navigateTo('topics')" style="border-bottom-color: ${pct===100 ? 'var(--success)' : 'transparent'}">
                 <div class="tpc-icon" style="background:${topic.color}20; color:${topic.color}">${topic.icon}</div>
                 <div class="tpc-title">${topic.title}</div>
                 <div style="font-size:0.8rem; color:var(--text-tertiary)">${tDone} von ${tTotal} Lektionen</div>
                 <div class="tpc-bar"><div class="tpc-bar-fill" style="width:${pct}%; background:${pct===100 ? 'var(--success)' : topic.color}"></div></div>
-            </div>`;
+            </button>`;
     });
 }
 
@@ -1175,7 +1190,7 @@ function renderTopics(filter="all", rawSearchTerm = "") {
     COURSE_DATA.forEach(topic => {
         const topicMatches = topic.title.toLowerCase().includes(searchTerm);
         let html = `<div class="topic-group open">
-            <div class="topic-group-header">
+            <div class="topic-group-header" role="button" tabindex="0">
                 <div class="topic-group-icon" style="background:${topic.color}20; color:${topic.color}">${topic.icon}</div>
                 <div class="topic-group-title">${topic.title}</div>
             </div><div class="topic-group-body">`;
@@ -1183,7 +1198,7 @@ function renderTopics(filter="all", rawSearchTerm = "") {
         let hasContent = false;
         topic.categories.forEach(cat => {
             const catMatches = cat.title.toLowerCase().includes(searchTerm);
-            let catHtml = `<div class="subtopic-group open"><div class="subtopic-header">${cat.title}</div><div class="subtopic-body">`;
+            let catHtml = `<div class="subtopic-group open"><div class="subtopic-header" role="button" tabindex="0">${cat.title}</div><div class="subtopic-body">`;
             let hasLesson = false;
             cat.lessons.forEach(l => {
                 const done = Storage.isCompleted(l.id);
@@ -1196,8 +1211,8 @@ function renderTopics(filter="all", rawSearchTerm = "") {
 
                 hasLesson = true; hasContent = true;
                 catHtml += `
-                    <div class="lesson-item" onclick="openLesson('${l.id}')">
-                        <div class="lesson-checkbox ${done ? 'checked':''}" onclick="event.stopPropagation(); toggleLesson('${l.id}')">✓</div>
+                    <div class="lesson-item" role="button" tabindex="0" onclick="openLesson('${l.id}')" onkeydown="activateOnKey(event, () => openLesson('${l.id}'))">
+                        <button class="lesson-checkbox ${done ? 'checked':''}" type="button" onclick="event.stopPropagation(); toggleLesson('${l.id}')" aria-label="Lektion ${done ? "als offen markieren" : "als erledigt markieren"}">✓</button>
                         <div class="lesson-item-info">${l.title}</div>
                     </div>`;
             });
@@ -1216,6 +1231,12 @@ function renderTopics(filter="all", rawSearchTerm = "") {
 function setupTopicsAccordion() {
     const topicsList = document.getElementById("topicsList");
     if (!topicsList) return;
+
+    topicsList.addEventListener("keydown", (event) => {
+        const header = event.target.closest(".topic-group-header, .subtopic-header");
+        if (!header) return;
+        activateOnKey(event, () => header.click());
+    });
 
     topicsList.addEventListener("click", (event) => {
         const topicHeader = event.target.closest(".topic-group-header");
@@ -1314,12 +1335,12 @@ let fcIdx = 0;
 
 function renderFlashcardSetup() {
     const grid = document.getElementById("fc-topic-grid");
-    grid.innerHTML = `<div class="fc-topic-btn" onclick="startFC('all')"><div style="font-size:2rem">📚</div><div style="font-weight:bold; margin-top:10px;">Alle Themen mixen</div></div>`;
+    grid.innerHTML = `<button class="fc-topic-btn" type="button" onclick="startFC('all')"><div style="font-size:2rem">📚</div><div style="font-weight:bold; margin-top:10px;">Alle Themen mixen</div></button>`;
     COURSE_DATA.forEach(t => {
         let count = 0;
         t.categories.forEach(c => c.lessons.forEach(l => { if(l.content.flashcards) count += l.content.flashcards.length; }));
         if(count > 0) {
-            grid.innerHTML += `<div class="fc-topic-btn" onclick="startFC('${t.id}')"><div style="font-size:2rem">${t.icon}</div><div style="font-weight:bold; margin-top:10px;">${t.title}</div><div style="font-size:0.8rem; color:var(--text-tertiary)">${count} Karten</div></div>`;
+            grid.innerHTML += `<button class="fc-topic-btn" type="button" onclick="startFC('${t.id}')"><div style="font-size:2rem">${t.icon}</div><div style="font-weight:bold; margin-top:10px;">${t.title}</div><div style="font-size:0.8rem; color:var(--text-tertiary)">${count} Karten</div></button>`;
         }
     });
 }
