@@ -99,6 +99,7 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
 
 /* — Pages & General Layout — */
 .page-container { padding: 28px; max-width: 1100px; margin: 0 auto; width: 100%; flex: 1;}
+.app-footer { padding: 12px 28px 20px; color: var(--text-secondary); font-size: 0.9rem; border-top: 1px solid var(--border); }
 .page { display: none; animation: fadeIn 0.3s ease; }
 .page.active { display: block; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
@@ -314,7 +315,7 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
         <div class="page-container">
             <section class="page active" id="page-dashboard">
                 <div class="page-header">
-                    <h1>Dein Weg zur Eins 🏆</h1>
+                    <h1>Lernübersicht & Fortschritt</h1>
                     <p class="page-subtitle">Bereite dich systematisch auf die IHK-Abschlussprüfung vor.</p>
                 </div>
                 <div class="hero-progress-card">
@@ -332,7 +333,7 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
                         <div class="hero-stat"><span class="hero-stat-value" id="statTotal">0</span><span class="hero-stat-label">Gesamt</span></div>
                     </div>
                 </div>
-                <h2 class="section-title">Dein Lernfortschritt</h2>
+                <h2 class="section-title">Themenübersichten</h2>
                 <div class="topic-progress-grid" id="topicProgressGrid"></div>
             </section>
 
@@ -532,6 +533,7 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
                 </div>
             </section>
         </div>
+        <footer class="app-footer">Creator: Timon &amp; Big 3</footer>
     </main>
 
     <div class="ai-chat-modal" id="aiChatModal" aria-hidden="true">
