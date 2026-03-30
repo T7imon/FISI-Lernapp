@@ -223,8 +223,8 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
 .fc-front { background: var(--bg-secondary); color: var(--text-primary); transform: rotateY(0deg) translateZ(1px); z-index: 2; }
 .fc-back { background: var(--accent-light); border-color: var(--accent); color: var(--text-primary); transform: rotateY(180deg) translateZ(1px); }
 .fc-back-content { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; flex: 1; }
-.fc-back-actions { width: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding-top: 16px; border-top: 1px solid var(--border); margin-top: 16px; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
-.fc-back-actions.is-visible { opacity: 1; pointer-events: all; }
+.fc-back-actions { width: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding-top: 16px; border-top: 1px solid var(--border); margin-top: 16px; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.3s ease, visibility 0.3s ease; }
+.fc-back-actions.is-visible { opacity: 1; visibility: visible; pointer-events: all; }
 .fc-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); margin-bottom: 16px; font-weight: 700; }
 .fc-text { font-size: 1.1rem; font-weight: 500; line-height: 1.5; }
 
@@ -387,7 +387,7 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
                 <div id="fc-active-view" class="fc-active-session" style="display:none;">
                     <button class="btn btn-secondary" style="align-self: flex-start; margin-bottom: 20px;" onclick="stopFlashcards()">← Zurück</button>
                     <div class="fc-scene">
-                        <button class="fc-card" id="fc-card" type="button" aria-label="Lernkarte umdrehen" onclick="flipCard()">
+                        <div class="fc-card" id="fc-card" role="button" tabindex="0" aria-label="Lernkarte umdrehen" onclick="flipCard()" onkeydown="handleFlashcardKeydown(event)">
                             <div class="fc-face fc-front">
                                 <span class="fc-label">Frage</span>
                                 <div class="fc-text" id="fc-question">...</div>
@@ -404,7 +404,7 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
                                     <button class="btn btn-secondary ai-chat-btn" type="button" onclick="event.stopPropagation(); openAiChatForFlashcard()">🤖 KI fragen</button>
                                 </div>
                             </div>
-                        </button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -2382,6 +2382,14 @@ function startFC(topicId) {
 function stopFlashcards() {
     document.getElementById("fc-setup-view").style.display = "block";
     document.getElementById("fc-active-view").style.display = "none";
+}
+
+
+function handleFlashcardKeydown(event) {
+    if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        flipCard();
+    }
 }
 
 function flipCard() {
