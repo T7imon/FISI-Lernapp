@@ -1187,6 +1187,130 @@ const COURSE_DATA = [
         ]
       }
     ]
+  },
+  {
+    id: "wirtschaft-und-soziales",
+    title: "Wirtschaft und Soziales",
+    icon: "💼",
+    color: "#f59e0b",
+    categories: [
+      {
+        id: "arbeitsrecht-betriebsverfassung",
+        title: "Arbeitsrecht und Betriebsverfassung",
+        lessons: [
+          {
+            id: "kuendigungsschutz-arbeitszeiten",
+            title: "Kündigungsschutz und Arbeitszeiten",
+            content: {
+              description: "Grundlagen des Arbeitsrechts helfen, Rechte und Pflichten im Betrieb sicher einzuordnen.",
+              keyPoints: [
+                "Das Kündigungsschutzgesetz greift in der Regel nach sechs Monaten Betriebszugehörigkeit in Betrieben mit regelmäßig mehr als zehn Beschäftigten.",
+                "Kündigungen müssen sozial gerechtfertigt sein (personenbedingt, verhaltensbedingt oder betriebsbedingt).",
+                "Das Arbeitszeitgesetz regelt u. a. tägliche Höchstarbeitszeiten, Pausen und Ruhezeiten.",
+                "Überstunden brauchen eine rechtliche Grundlage (Vertrag, Tarifvertrag oder Betriebsvereinbarung).",
+                "Bei Kündigungen und Abmahnungen sind Fristen, Dokumentation und Anhörung zentral."
+              ],
+              examTip: "In Prüfungsaufgaben immer zwischen Rechtsgrundlage, Fristen und praktischer Umsetzung im Betrieb unterscheiden.",
+              flashcards: [
+                { q: "Wann greift das Kündigungsschutzgesetz typischerweise?", a: "Nach mehr als 6 Monaten Betriebszugehörigkeit in Betrieben mit regelmäßig über 10 Beschäftigten." },
+                { q: "Welche drei Hauptgründe gibt es für ordentliche Kündigungen?", a: "Personenbedingt, verhaltensbedingt und betriebsbedingt." }
+              ]
+            }
+          },
+          {
+            id: "betriebsrat-betrvg",
+            title: "Betriebsrat und BetrVG",
+            content: {
+              description: "Das Betriebsverfassungsgesetz regelt die Zusammenarbeit von Arbeitgeber und Betriebsrat.",
+              keyPoints: [
+                "Der Betriebsrat vertritt die Interessen der Arbeitnehmerinnen und Arbeitnehmer im Betrieb.",
+                "Mitbestimmungsrechte bestehen z. B. bei Arbeitszeitregelungen, Urlaubsgrundsätzen und Ordnung im Betrieb.",
+                "Informations- und Anhörungsrechte sichern eine frühzeitige Beteiligung bei personellen Maßnahmen.",
+                "Eine vertrauensvolle Zusammenarbeit zwischen Arbeitgeber und Betriebsrat ist gesetzlich vorgesehen.",
+                "Betriebsvereinbarungen konkretisieren Regeln verbindlich für den Betrieb."
+              ],
+              flashcards: [
+                { q: "Was ist eine zentrale Aufgabe des Betriebsrats?", a: "Die Interessenvertretung der Beschäftigten gegenüber dem Arbeitgeber." },
+                { q: "Was regelt das BetrVG?", a: "Die Rechte und Pflichten von Betriebsrat und Arbeitgeber im Betrieb." }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        id: "unternehmensformen",
+        title: "Unternehmensformen",
+        lessons: [
+          {
+            id: "gmbh-ag-ohg",
+            title: "GmbH, AG und OHG",
+            content: {
+              description: "Rechtsformen unterscheiden sich vor allem in Haftung, Kapitalbedarf und Leitungsstruktur.",
+              keyPoints: [
+                "Die GmbH ist eine Kapitalgesellschaft mit beschränkter Haftung und klarer Trennung von Gesellschafts- und Privatvermögen.",
+                "Die AG eignet sich besonders für größere Unternehmen mit Aktienkapital und Organen wie Vorstand, Aufsichtsrat und Hauptversammlung.",
+                "Die OHG ist eine Personengesellschaft, bei der die Gesellschafter grundsätzlich persönlich und unbeschränkt haften.",
+                "Die Wahl der Rechtsform beeinflusst Finanzierung, Besteuerung und Entscheidungswege.",
+                "In IHK-Aufgaben sind Vergleichstabellen (Haftung, Gründung, Leitung) ein typischer Ansatz."
+              ],
+              examTip: "Bei Vergleichen immer mit Haftung beginnen, dann Kapital, Vertretung und Eignung für den Unternehmenszweck darstellen.",
+              flashcards: [
+                { q: "Wie haften Gesellschafter einer OHG?", a: "Persönlich, unmittelbar und unbeschränkt mit ihrem Privatvermögen." },
+                { q: "Was ist ein Kernmerkmal der GmbH?", a: "Die Haftung ist grundsätzlich auf das Gesellschaftsvermögen beschränkt." }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        id: "projektmanagement",
+        title: "Projektmanagement-Grundlagen",
+        lessons: [
+          {
+            id: "projektmanagement-basics",
+            title: "Projektmanagement-Basics",
+            content: {
+              description: "Projektmanagement strukturiert Vorhaben in klare Phasen mit definierten Zielen und Ergebnissen.",
+              keyPoints: [
+                "Typische Phasen: Initialisierung, Planung, Durchführung, Abschluss.",
+                "SMART formulierte Ziele verbessern Steuerbarkeit und Bewertung.",
+                "Werkzeuge wie Projektstrukturplan, Meilensteinplan und Risikoanalyse sind prüfungsrelevant.",
+                "Rollen (Projektleitung, Team, Stakeholder) und Kommunikationsregeln sollten früh geklärt sein.",
+                "Nach Projektende sichern Lessons Learned und Projektdokumentation den Wissenstransfer."
+              ],
+              flashcards: [
+                { q: "Wofür steht SMART bei Projektzielen?", a: "Spezifisch, messbar, attraktiv/akzeptiert, realistisch, terminiert." },
+                { q: "Was ist ein Meilenstein?", a: "Ein wichtiger, überprüfbarer Zwischenpunkt im Projektverlauf." }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        id: "nachhaltigkeit-ergonomie",
+        title: "Umweltschutz und Ergonomie",
+        lessons: [
+          {
+            id: "umweltschutz-ergonomie",
+            title: "Nachhaltigkeit und ergonomisches Arbeiten",
+            content: {
+              description: "Nachhaltigkeit und Ergonomie sind Teil eines modernen, verantwortungsvollen IT-Betriebs.",
+              keyPoints: [
+                "Umweltschutz in der IT umfasst Energieeffizienz, Lebenszyklusmanagement und fachgerechte Entsorgung.",
+                "Green-IT-Maßnahmen wie Virtualisierung und Lastmanagement senken Energieverbrauch und Kosten.",
+                "Ergonomie am Arbeitsplatz reduziert gesundheitliche Belastungen und steigert Produktivität.",
+                "Wichtige Faktoren sind Bildschirmhöhe, Sitzposition, Beleuchtung und regelmäßige Bewegungspausen.",
+                "Arbeitsschutz und betriebliche Gesundheitsförderung sind auch organisatorisch zu verankern."
+              ],
+              flashcards: [
+                { q: "Nenne zwei typische Green-IT-Maßnahmen.", a: "Virtualisierung von Servern und konsequentes Energiemanagement." },
+                { q: "Warum ist Ergonomie im IT-Beruf wichtig?", a: "Sie beugt langfristigen gesundheitlichen Beschwerden vor und unterstützt konzentriertes Arbeiten." }
+              ]
+            }
+          }
+        ]
+      }
+    ]
   }
 ];
 
