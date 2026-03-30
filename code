@@ -205,6 +205,7 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
 /* — INTERAKTIVER TRAINER (Rechner) — */
 .trainer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; }
 .trainer-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px; box-shadow: var(--shadow-sm); }
+.trainer-card.full-width { grid-column: 1 / -1; }
 .trainer-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
 .trainer-icon { width: 40px; height: 40px; border-radius: var(--radius-sm); background: var(--accent-light); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
 .trainer-title { font-size: 1.1rem; font-weight: 700; }
@@ -215,6 +216,12 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
 .trainer-result { padding: 12px; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.9rem; text-align: center; display: none; margin-top: 12px;}
 .trainer-result.correct { background: var(--success-light); color: var(--success); display: block; border: 1px solid var(--success); }
 .trainer-result.incorrect { background: var(--danger-light); color: var(--danger); display: block; border: 1px solid var(--danger); }
+.trainer-result.loading { background: var(--accent-light); color: var(--accent); display: block; border: 1px solid var(--accent); }
+.endless-meta { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; }
+.endless-scenario { background: var(--bg-primary); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; line-height: 1.55; margin-bottom: 12px; }
+.endless-question { font-weight: 700; margin-bottom: 14px; }
+.endless-answer { width: 100%; min-height: 130px; resize: vertical; }
+.endless-feedback ul { margin: 8px 0; padding-left: 20px; }
 
 /* — Datenverwaltung — */
 .data-management-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-sm); }
@@ -434,6 +441,32 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
                             <button class="btn btn-secondary" onclick="generateRaidTask()">Neue Aufgabe</button>
                         </div>
                         <div class="trainer-result" id="raidResult"></div>
+                    </div>
+
+                    <div class="trainer-card full-width">
+                        <div class="trainer-header">
+                            <div class="trainer-icon">♾️</div>
+                            <div class="trainer-title">Endlos-Training (KI-Szenarien)</div>
+                        </div>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 12px;">Generiert bei jedem Klick ein neues AP2-Szenario inklusive Leitfrage. Danach kannst du deine Antwort qualitativ bewerten lassen.</p>
+                        <div class="trainer-form">
+                            <div class="trainer-form-group">
+                                <label for="endlessTopicSelect">Thema</label>
+                                <select id="endlessTopicSelect" class="input-select"></select>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:10px; flex-wrap: wrap; margin-bottom: 12px;">
+                            <button class="btn btn-primary" id="endlessGenerateBtn" type="button" onclick="generateEndlessScenario()">Neues Szenario erzeugen</button>
+                            <button class="btn btn-secondary" id="endlessEvaluateBtn" type="button" onclick="evaluateEndlessAnswer()">Antwort bewerten</button>
+                        </div>
+                        <div class="endless-meta" id="endlessMeta">Status: Noch kein Szenario generiert.</div>
+                        <div class="endless-scenario" id="endlessScenario">Klicke auf „Neues Szenario erzeugen“, um zu starten.</div>
+                        <div class="endless-question" id="endlessQuestion">Leitfrage: –</div>
+                        <div class="trainer-form-group">
+                            <label for="endlessAnswerInput">Deine Antwort</label>
+                            <textarea id="endlessAnswerInput" class="input-field endless-answer" placeholder="Strukturiere deine Lösung in Analyse, Entscheidung und Begründung."></textarea>
+                        </div>
+                        <div class="trainer-result" id="endlessResult"></div>
                     </div>
                 </div>
             </section>
@@ -1213,7 +1246,7 @@ function navigateTo(pageId) {
     if (pageId === "dashboard") renderDashboard();
     if (pageId === "topics") renderTopics(getActiveTopicFilter(), getSearchQuery());
     if (pageId === "flashcards") renderFlashcardSetup();
-    if (pageId === "trainer") { generateSubnetTask(); generateRaidTask(); }
+    if (pageId === "trainer") { generateSubnetTask(); generateRaidTask(); renderEndlessTopicOptions(); }
     
     window.scrollTo({ top: 0 });
 }
@@ -1491,8 +1524,27 @@ Regeln:
 3) Wenn sinnvoll, gib kurze Merksätze und typische Prüfungsfallen an.
 4) Stelle bei unklaren Fragen maximal eine kurze Rückfrage.
 5) Keine erfundenen Fakten; Unsicherheit transparent benennen.`;
+const ENDLESS_SCENARIO_SYSTEM_PROMPT = `Du erstellst AP2-typische, szenariobasierte IHK-Aufgaben für Fachinformatiker Systemintegration.
+Antworte ausschließlich als JSON ohne Markdown.
+Pflichtfelder: "scenario", "question", "sample_solution".
+Regeln:
+- scenario: 120-220 Wörter, realistische Firmenlage, konkrete Randbedingungen (Budget/Zeit/Sicherheit/Betrieb).
+- question: genau eine Leitfrage, die eine begründete Entscheidung verlangt.
+- sample_solution: 140-260 Wörter, klar strukturiert (Analyse, Entscheidung, Begründung, Risiken, Maßnahmen).
+- Sprache: Deutsch, sachlich, prüfungsnah.
+- Keine zusätzlichen Schlüssel.`;
+const ENDLESS_EVAL_SYSTEM_PROMPT = `Du bewertest Antworten auf AP2-Szenariofragen für Fachinformatiker Systemintegration.
+Antworte ausschließlich als JSON ohne Markdown.
+Pflichtfelder: "summary", "strengths", "missing", "next_steps", "score".
+Regeln:
+- summary: 2-3 Sätze qualitative Bewertung.
+- strengths/missing/next_steps: jeweils Liste mit 2-5 kurzen Stichpunkten.
+- score: Ganzzahl 0-100.
+- Sprache: Deutsch, prüfungsnah, konstruktiv.
+- Keine zusätzlichen Schlüssel.`;
 
 let aiChatState = { contextTitle: "", contextBody: "", contextType: "", messages: [] };
+let endlessState = { topic: "", scenario: "", question: "", sampleSolution: "" };
 
 function escapeHtml(value = "") {
     return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
@@ -1596,14 +1648,16 @@ Frage: ${card.q}
 Erwartete Antwort: ${card.a}` });
 }
 
-async function fetchAiAnswer(settings, messages) {
+async function fetchAiAnswer(settings, messages, options = {}) {
+    const systemPrompt = options.systemPrompt || AI_SYSTEM_PROMPT;
+    const temperature = Number.isFinite(options.temperature) ? options.temperature : 0.3;
     if (settings.provider === "gemini") {
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(settings.model)}:generateContent?key=${encodeURIComponent(settings.apiKey)}`;
         const geminiParts = messages.map(m => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] }));
         const response = await fetch(endpoint, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ systemInstruction: { parts: [{ text: AI_SYSTEM_PROMPT }] }, contents: geminiParts, generationConfig: { temperature: 0.3 } })
+            body: JSON.stringify({ systemInstruction: { parts: [{ text: systemPrompt }] }, contents: geminiParts, generationConfig: { temperature } })
         });
         if (!response.ok) throw new Error(`Gemini API Fehler (${response.status}): ${(await response.text()).slice(0, 220)}`);
         const data = await response.json();
@@ -1613,11 +1667,140 @@ async function fetchAiAnswer(settings, messages) {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${settings.apiKey}` },
-        body: JSON.stringify({ model: settings.model, temperature: 0.3, messages: [{ role: "system", content: AI_SYSTEM_PROMPT }, ...messages] })
+        body: JSON.stringify({ model: settings.model, temperature, messages: [{ role: "system", content: systemPrompt }, ...messages] })
     });
     if (!response.ok) throw new Error(`OpenAI API Fehler (${response.status}): ${(await response.text()).slice(0, 220)}`);
     const data = await response.json();
     return data?.choices?.[0]?.message?.content || "Keine Antwort erhalten.";
+}
+
+function parseJsonResponse(rawText) {
+    const sanitized = rawText.trim().replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+    return JSON.parse(sanitized);
+}
+
+function resetEndlessResult(type = "") {
+    const resultBox = document.getElementById("endlessResult");
+    resultBox.className = `trainer-result${type ? ` ${type}` : ""}`;
+    resultBox.innerHTML = "";
+}
+
+function renderEndlessTopicOptions() {
+    const topicSelect = document.getElementById("endlessTopicSelect");
+    if (!topicSelect) return;
+    const topicOptions = COURSE_DATA.map(topic => `<option value="${escapeHtml(topic.title)}">${escapeHtml(topic.icon)} ${escapeHtml(topic.title)}</option>`).join("");
+    topicSelect.innerHTML = `<option value="Gemischt">🔀 Gemischt (alle AP2-Bereiche)</option>${topicOptions}`;
+}
+
+async function generateEndlessScenario() {
+    const settings = getCurrentLlmSettings();
+    if (!settings.apiKey) { showToast("Bitte zuerst einen API-Key in den KI-Einstellungen hinterlegen.", "error"); return; }
+
+    const topic = document.getElementById("endlessTopicSelect").value;
+    const generateBtn = document.getElementById("endlessGenerateBtn");
+    const evaluateBtn = document.getElementById("endlessEvaluateBtn");
+    generateBtn.disabled = true;
+    evaluateBtn.disabled = true;
+    resetEndlessResult("loading");
+    document.getElementById("endlessResult").textContent = "Szenario wird generiert …";
+
+    try {
+        const prompt = `Erzeuge jetzt genau ein neues Szenario für das Thema "${topic}".
+Wichtig: Liefere valides JSON mit den Schlüsseln scenario, question, sample_solution.`;
+        const raw = await fetchAiAnswer(settings, [{ role: "user", content: prompt }], { systemPrompt: ENDLESS_SCENARIO_SYSTEM_PROMPT, temperature: 0.7 });
+        const parsed = parseJsonResponse(raw);
+        if (!parsed?.scenario || !parsed?.question || !parsed?.sample_solution) throw new Error("Unvollständige JSON-Antwort.");
+
+        endlessState = {
+            topic,
+            scenario: parsed.scenario.trim(),
+            question: parsed.question.trim(),
+            sampleSolution: parsed.sample_solution.trim()
+        };
+
+        document.getElementById("endlessMeta").textContent = `Status: Szenario aktiv • Thema: ${topic}`;
+        document.getElementById("endlessScenario").textContent = endlessState.scenario;
+        document.getElementById("endlessQuestion").textContent = `Leitfrage: ${endlessState.question}`;
+        document.getElementById("endlessAnswerInput").value = "";
+        resetEndlessResult();
+        showToast("Neues Endlos-Szenario erstellt.", "success");
+    } catch {
+        document.getElementById("endlessMeta").textContent = "Status: Generierung fehlgeschlagen.";
+        document.getElementById("endlessScenario").textContent = "Die KI konnte kein gültiges Szenario liefern. Bitte erneut versuchen.";
+        document.getElementById("endlessQuestion").textContent = "Leitfrage: –";
+        resetEndlessResult("incorrect");
+        document.getElementById("endlessResult").textContent = "Fehler bei der Szenario-Generierung (JSON/Antwortformat prüfen).";
+    } finally {
+        generateBtn.disabled = false;
+        evaluateBtn.disabled = false;
+    }
+}
+
+async function evaluateEndlessAnswer() {
+    const settings = getCurrentLlmSettings();
+    if (!settings.apiKey) { showToast("Bitte zuerst einen API-Key in den KI-Einstellungen hinterlegen.", "error"); return; }
+    if (!endlessState.scenario || !endlessState.question || !endlessState.sampleSolution) {
+        showToast("Erzeuge zuerst ein Szenario im Endlos-Training.", "error");
+        return;
+    }
+
+    const userAnswer = document.getElementById("endlessAnswerInput").value.trim();
+    if (!userAnswer) {
+        showToast("Bitte zuerst eine eigene Antwort eingeben.", "error");
+        return;
+    }
+
+    const evaluateBtn = document.getElementById("endlessEvaluateBtn");
+    evaluateBtn.disabled = true;
+    resetEndlessResult("loading");
+    document.getElementById("endlessResult").textContent = "Antwort wird bewertet …";
+
+    try {
+        const evalPrompt = `Szenario:
+${endlessState.scenario}
+
+Leitfrage:
+${endlessState.question}
+
+Musterlösung:
+${endlessState.sampleSolution}
+
+Nutzerantwort:
+${userAnswer}
+
+Bewerte qualitativ.`;
+        const raw = await fetchAiAnswer(settings, [{ role: "user", content: evalPrompt }], { systemPrompt: ENDLESS_EVAL_SYSTEM_PROMPT, temperature: 0.2 });
+        const parsed = parseJsonResponse(raw);
+        const score = Number.isFinite(Number(parsed?.score)) ? Math.max(0, Math.min(100, Math.round(Number(parsed.score)))) : null;
+        const strengths = Array.isArray(parsed?.strengths) ? parsed.strengths : [];
+        const missing = Array.isArray(parsed?.missing) ? parsed.missing : [];
+        const nextSteps = Array.isArray(parsed?.next_steps) ? parsed.next_steps : [];
+
+        if (!parsed?.summary || !strengths.length || !missing.length) throw new Error("Unvollständige Bewertung.");
+
+        resetEndlessResult("correct");
+        document.getElementById("endlessResult").innerHTML = `
+            <div class="endless-feedback">
+                <strong>Qualitatives Feedback${score !== null ? ` (${score}/100)` : ""}:</strong>
+                <div style="margin-top: 8px;">${escapeHtml(parsed.summary)}</div>
+                <strong style="display:block; margin-top: 10px;">Was war gut:</strong>
+                <ul>${strengths.map(item => `<li>${escapeHtml(String(item))}</li>`).join("")}</ul>
+                <strong style="display:block; margin-top: 10px;">Was noch fehlt:</strong>
+                <ul>${missing.map(item => `<li>${escapeHtml(String(item))}</li>`).join("")}</ul>
+                <strong style="display:block; margin-top: 10px;">Nächste Schritte:</strong>
+                <ul>${nextSteps.map(item => `<li>${escapeHtml(String(item))}</li>`).join("")}</ul>
+            </div>
+            <details style="margin-top: 10px; text-align: left;">
+                <summary>Musterlösung anzeigen</summary>
+                <div style="margin-top: 8px; line-height: 1.45;">${escapeHtml(endlessState.sampleSolution)}</div>
+            </details>
+        `;
+    } catch {
+        resetEndlessResult("incorrect");
+        document.getElementById("endlessResult").textContent = "Bewertung fehlgeschlagen. Bitte erneut versuchen.";
+    } finally {
+        evaluateBtn.disabled = false;
+    }
 }
 
 async function submitAiChat(event) {
@@ -1840,6 +2023,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     syncLlmSettingsToUi();
+    renderEndlessTopicOptions();
     setupTopicsAccordion();
 
     navigateTo("dashboard");
