@@ -207,6 +207,15 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
 .trainer-result.correct { background: var(--success-light); color: var(--success); display: block; border: 1px solid var(--success); }
 .trainer-result.incorrect { background: var(--danger-light); color: var(--danger); display: block; border: 1px solid var(--danger); }
 
+/* — Datenverwaltung — */
+.data-management-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-sm); }
+.data-management-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 16px; }
+.data-action { background: var(--bg-primary); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.data-action h3 { font-size: 1rem; }
+.data-action p { color: var(--text-secondary); font-size: 0.88rem; }
+.import-file-input { display: none; }
+.data-hint { margin-top: 12px; font-size: 0.8rem; color: var(--text-tertiary); }
+
 
 
 /* Toasts */
@@ -401,8 +410,26 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
                 <div class="page-header">
                     <h1>Statistiken 📈</h1>
                 </div>
-                <div style="background:var(--bg-secondary); padding: 40px; border-radius:var(--radius-lg); text-align:center; border:1px solid var(--border);">
+                <div style="background:var(--bg-secondary); padding: 40px; border-radius:var(--radius-lg); text-align:center; border:1px solid var(--border); margin-bottom: 20px;">
                     <p style="color:var(--text-secondary); font-size:1.1rem;">Lerne konsequent, der Balken füllt sich von allein.</p>
+                </div>
+                <div class="data-management-card">
+                    <h2 style="font-size:1.2rem;">Datenverwaltung</h2>
+                    <p class="page-subtitle">Exportiere deinen Lernfortschritt als JSON-Datei und importiere ihn auf einem anderen Gerät.</p>
+                    <div class="data-management-grid">
+                        <div class="data-action">
+                            <h3>Fortschritt exportieren</h3>
+                            <p>Lädt eine JSON-Datei mit allen abgeschlossenen Lektionen und dem Theme herunter.</p>
+                            <button class="btn btn-primary" id="exportProgressBtn">⬇️ Fortschritt herunterladen</button>
+                        </div>
+                        <div class="data-action">
+                            <h3>Fortschritt importieren</h3>
+                            <p>Importiert eine zuvor exportierte JSON-Datei und überschreibt den aktuellen localStorage.</p>
+                            <input type="file" id="importProgressInput" class="import-file-input" accept=".json,application/json">
+                            <button class="btn btn-secondary" id="importProgressBtn">⬆️ JSON-Datei auswählen</button>
+                        </div>
+                    </div>
+                    <p class="data-hint">Hinweis: Beim Import werden bestehende Fortschrittsdaten ersetzt.</p>
                 </div>
             </section>
         </div>
@@ -1027,9 +1054,31 @@ const COURSE_DATA = [
 const Storage = {
   _data: null,
   _defaults() { return { completed: [], theme: "light" }; },
-  load() { try { const r = localStorage.getItem("ap2-master"); this._data = r ? {...this._defaults(), ...JSON.parse(r)} : this._defaults(); } catch { this._data = this._defaults(); } },
+  _normalize(data) {
+    const defaults = this._defaults();
+    const rawCompleted = Array.isArray(data?.completed) ? data.completed : defaults.completed;
+    const validLessonIds = new Set();
+    COURSE_DATA.forEach(topic => topic.categories.forEach(cat => cat.lessons.forEach(lesson => validLessonIds.add(lesson.id))));
+
+    const completed = [...new Set(rawCompleted.filter(id => typeof id === "string" && validLessonIds.has(id)))];
+    const theme = data?.theme === "dark" ? "dark" : "light";
+    return { completed, theme };
+  },
+  load() {
+    try {
+      const r = localStorage.getItem("ap2-master");
+      this._data = r ? this._normalize({...this._defaults(), ...JSON.parse(r)}) : this._defaults();
+    } catch {
+      this._data = this._defaults();
+    }
+  },
   save() { localStorage.setItem("ap2-master", JSON.stringify(this._data)); },
   get data() { if (!this._data) this.load(); return this._data; },
+  replace(data) {
+    this._data = this._normalize(data);
+    this.save();
+    return this._data;
+  },
   toggleLesson(id) {
     if(this.data.completed.includes(id)) {
       this.data.completed = this.data.completed.filter(x => x !== id);
@@ -1188,6 +1237,41 @@ function toggleLesson(id) {
     Storage.toggleLesson(id);
     renderTopics(getActiveTopicFilter(), getSearchQuery());
     renderDashboard();
+}
+
+function exportProgress() {
+    const payload = {
+        app: "ap2-master",
+        exportedAt: new Date().toISOString(),
+        data: Storage.data
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    const datePart = new Date().toISOString().slice(0, 10);
+    link.download = `ap2-master-progress-${datePart}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    showToast("Fortschritt wurde exportiert.", "success");
+}
+
+async function importProgress(file) {
+    if (!file) return;
+    try {
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+        const importedData = parsed?.data ?? parsed;
+        Storage.replace(importedData);
+        document.documentElement.setAttribute("data-theme", Storage.data.theme);
+        renderDashboard();
+        renderTopics(getActiveTopicFilter(), getSearchQuery());
+        showToast("Fortschritt erfolgreich importiert.", "success");
+    } catch {
+        showToast("Import fehlgeschlagen: Ungültige JSON-Datei.", "error");
+    }
 }
 
 function openLesson(id) {
@@ -1431,6 +1515,15 @@ document.addEventListener("DOMContentLoaded", () => {
         document.documentElement.setAttribute("data-theme", next);
         Storage.data.theme = next; Storage.save();
     };
+
+    document.getElementById("exportProgressBtn").onclick = exportProgress;
+    const importInput = document.getElementById("importProgressInput");
+    document.getElementById("importProgressBtn").onclick = () => importInput.click();
+    importInput.addEventListener("change", async (event) => {
+        const [file] = event.target.files || [];
+        await importProgress(file);
+        event.target.value = "";
+    });
 
     document.querySelectorAll(".nav-item").forEach(item => {
         item.onclick = (e) => { e.preventDefault(); navigateTo(item.dataset.page); }
