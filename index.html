@@ -627,19 +627,45 @@ const COURSE_DATA = [
             id: "zertifikate-pki",
             title: "Zertifikate und PKI",
             content: {
-              description: "Public-Key-Infrastrukturen sind die Vertrauensbasis für verschlüsselte Kommunikation im Unternehmensnetz.",
-              keyPoints: [
-                "Bestandteile: Root-CA, Intermediate-CA, Registration Authority, CRL/OCSP.",
-                "Zertifikatslebenszyklus: Beantragung (CSR), Ausstellung, Verteilung, Erneuerung, Sperrung.",
-                "Wichtige Felder: Subject, SAN, Issuer, Gültigkeit, Key Usage, EKU.",
-                "Typische Fehler: Abgelaufenes Zertifikat, falscher Hostname im SAN, nicht vertrauenswürdige CA.",
-                "Härtung: Private Keys in HSM/TPM schützen, kurze Laufzeiten, automatisierte Erneuerung."
-              ],
+              descriptionMarkdown: "Eine **Public Key Infrastructure (PKI)** sorgt dafür, dass sich Systeme im Netzwerk gegenseitig vertrauen können. Ohne PKI wäre HTTPS nur Verschlüsselung ohne verlässliche Identitätsprüfung.",
+              sections: {
+                grundlagen_und_aufbau: `Eine PKI funktioniert wie ein digitales Ausweissystem:
+
+- Die **Root-CA** ist die oberste Vertrauensinstanz. Ihr Zertifikat liegt in Trust Stores (Browser, Betriebssysteme, Appliances).
+- Die **Intermediate-CA** signiert die eigentlichen Server- und Client-Zertifikate.
+- Eine **Registration Authority (RA)** prüft vor der Ausstellung die Identität bzw. Berechtigung.
+
+Warum diese Trennung wichtig ist:
+Die Root-CA wird im professionellen Betrieb möglichst **offline** gehalten. Dadurch ist ein Angriff auf laufende Systeme nicht automatisch ein Totalverlust des gesamten Vertrauensankers.`,
+                lebenszyklus_mit_praxisbezug: `Der Lebenszyklus eines Zertifikats ist ein Betriebsprozess:
+
+1. Schlüssel erzeugen und **CSR** erstellen.
+2. Identität prüfen lassen und Zertifikat ausstellen.
+3. Zertifikat inkl. Kette sauber ausrollen.
+4. Ablauf überwachen und frühzeitig erneuern.
+5. Bei Vorfall sperren (**CRL/OCSP**).
+
+Praxisfall aus dem FISI-Alltag:
+Ein Mitarbeiter meldet eine Browserwarnung. Prüfe zuerst:
+1) passt der Hostname zur **SAN**-Liste, 2) ist das Zertifikat abgelaufen, 3) ist die Zertifikatskette vollständig und vertrauenswürdig.`,
+                prufungslogik_fur_ap2: `In AP2-Aufgaben zählt die **Begründung**:
+
+- Nicht nur "ungültig", sondern **warum** (z. B. SAN-Mismatch, Kette unvollständig, Zertifikat widerrufen).
+- Auswirkungen nennen (z. B. Verbindungsabbruch, Man-in-the-Middle-Risiko).
+- Konkrete Maßnahme ergänzen (korrektes Re-Issuing, Auto-Renewal, Monitoring).
+
+\`\`\`bash
+# Schneller Erstcheck auf dem Admin-Client
+openssl s_client -connect intranet.firma.local:443 -servername intranet.firma.local
+\`\`\``
+              },
               examTip: "In Prüfungen musst du oft erklären, warum ein Zertifikat als ungültig bewertet wird. Prüfe immer SAN, Kette und Ablaufdatum.",
               keyTerms: "PKI | CA | CSR | CRL | OCSP | SAN",
               flashcards: [
-                { q: "Wozu dient eine Intermediate-CA?", a: "Sie trennt die operative Signierung von der Root-CA. Bei Kompromittierung bleibt die Root-CA geschützt." },
-                { q: "Was ist der Unterschied zwischen CRL und OCSP?", a: "CRL ist eine periodisch veröffentlichte Sperrliste, OCSP liefert den Sperrstatus eines Zertifikats in Echtzeit." }
+                { q: "Warum wird eine Root-CA in Unternehmen möglichst offline betrieben?", a: "Weil sie der höchste Vertrauensanker ist. Offline-Betrieb reduziert das Risiko, dass ein Angreifer den gesamten PKI-Vertrauensbaum kompromittiert." },
+                { q: "Welchen Zweck erfüllt das SAN-Feld (Subject Alternative Name) in einem Zertifikat?", a: "Im SAN stehen die gültigen Hostnamen. Wenn der aufgerufene Name dort fehlt, ist das Zertifikat für diese Verbindung ungültig." },
+                { q: "Ein Browser meldet bei einer internen HTTPS-Seite eine Zertifikatswarnung. Welche drei Prüfungen machst du zuerst?", a: "Hostname gegen SAN prüfen, Ablaufdatum kontrollieren und die vollständige Zertifikatskette inkl. vertrauenswürdiger CA validieren." },
+                { q: "Was ist der praktische Unterschied zwischen CRL und OCSP?", a: "CRL verteilt periodisch Sperrlisten, OCSP fragt den Status eines einzelnen Zertifikats online ab. OCSP ist aktueller, CRL ist einfacher offline nutzbar." }
               ]
             }
           },
@@ -1434,17 +1460,32 @@ Get-PSDrive -PSProvider FileSystem |
             id: "betriebsrat-betrvg",
             title: "Betriebsrat und BetrVG",
             content: {
-              description: "Das Betriebsverfassungsgesetz regelt die Zusammenarbeit von Arbeitgeber und Betriebsrat.",
-              keyPoints: [
-                "Der Betriebsrat vertritt die Interessen der Arbeitnehmerinnen und Arbeitnehmer im Betrieb.",
-                "Mitbestimmungsrechte bestehen z. B. bei Arbeitszeitregelungen, Urlaubsgrundsätzen und Ordnung im Betrieb.",
-                "Informations- und Anhörungsrechte sichern eine frühzeitige Beteiligung bei personellen Maßnahmen.",
-                "Eine vertrauensvolle Zusammenarbeit zwischen Arbeitgeber und Betriebsrat ist gesetzlich vorgesehen.",
-                "Betriebsvereinbarungen konkretisieren Regeln verbindlich für den Betrieb."
-              ],
+              descriptionMarkdown: "Das **Betriebsverfassungsgesetz (BetrVG)** regelt die Zusammenarbeit zwischen Arbeitgeber und Betriebsrat. Für AP2 ist wichtig: Du musst Situationen sauber einordnen, statt nur Begriffe aufzuzählen.",
+              sections: {
+                rolle_des_betriebsrats: `Der Betriebsrat vertritt die Interessen der Beschäftigten im Betrieb. Er ist kein "Gegner" der Geschäftsführung, sondern ein gesetzlich vorgesehenes Gremium zur Mitgestaltung betrieblicher Regeln.
+
+In der Praxis betrifft das häufig:
+- Arbeitszeitmodelle
+- Urlaubsgrundsätze
+- Ordnung im Betrieb`,
+                informations_und_mitbestimmungsrechte: `Ein häufiger Prüfungsfehler: Informationsrecht, Anhörungsrecht und Mitbestimmung werden vermischt.
+
+- **Informationsrecht**: Der Betriebsrat muss rechtzeitig informiert werden.
+- **Anhörungsrecht**: Vor bestimmten Maßnahmen ist eine Stellungnahme einzuholen.
+- **Mitbestimmung**: Ohne Einbindung des Betriebsrats sind bestimmte Regelungen nicht wirksam umsetzbar.`,
+                praxisfall_fisi: `Praxisbeispiel:
+In einem IT-Betrieb soll ein neues Schichtmodell für den Service-Desk eingeführt werden.
+
+Prüfungsnahe Antwortstruktur:
+1. Rechtsbezug nennen (Arbeitszeit/Ordnung im Betrieb).
+2. Beteiligungsrechte des Betriebsrats einordnen.
+3. Umsetzung über Betriebsvereinbarung skizzieren.
+4. Zielkonflikt lösen: Betriebsablauf sichern und Beschäftigteninteressen berücksichtigen.`
+              },
               flashcards: [
-                { q: "Was ist eine zentrale Aufgabe des Betriebsrats?", a: "Die Interessenvertretung der Beschäftigten gegenüber dem Arbeitgeber." },
-                { q: "Was regelt das BetrVG?", a: "Die Rechte und Pflichten von Betriebsrat und Arbeitgeber im Betrieb." }
+                { q: "Welche Kernaufgabe hat der Betriebsrat im Unternehmen?", a: "Er vertritt die Interessen der Beschäftigten und wirkt bei betrieblichen Regelungen nach BetrVG mit." },
+                { q: "Warum ist die Unterscheidung zwischen Informations-, Anhörungs- und Mitbestimmungsrecht prüfungsrelevant?", a: "Weil sich daraus ableitet, wie stark der Betriebsrat bei einer Maßnahme eingebunden werden muss und ob eine Umsetzung rechtssicher ist." },
+                { q: "Ein neues Schichtmodell im Service-Desk soll eingeführt werden. Welcher erste fachliche Schritt ist sinnvoll?", a: "Zuerst prüfen, welche Beteiligungsrechte des Betriebsrats betroffen sind, und die Umsetzung frühzeitig gemeinsam über eine klare Regelung (z. B. Betriebsvereinbarung) planen." }
               ]
             }
           }
@@ -1526,8 +1567,6 @@ Get-PSDrive -PSProvider FileSystem |
     ]
   }
 ];
-
-const FLASHCARD_TARGET_PER_LESSON = 12;
 
 const FLASHCARD_RULES = {
   "tls-ssl": [
@@ -1693,17 +1732,6 @@ function ensureRichFlashcards() {
 
         (FLASHCARD_RULES[lesson.id] || []).forEach(inject);
 
-        (content.keyPoints || []).forEach((point, idx) => {
-          inject({
-            q: `Nenne den Kernpunkt ${idx + 1} aus '${lesson.title}'.`,
-            a: point
-          });
-          inject({
-            q: `Transfer: Welche praktische Auswirkung hat in '${lesson.title}' folgender Aspekt: ${point}`,
-            a: `Er beeinflusst Planung, Betrieb und Fehlersuche direkt und sollte in der Lösung konkret auf den Use-Case bezogen werden.`
-          });
-        });
-
         if (content.keyTerms) {
           inject({
             q: `Welche Abkürzungen/Begriffe solltest du in '${lesson.title}' sicher definieren können?`,
@@ -1715,14 +1743,6 @@ function ensureRichFlashcards() {
           q: `Prüfungsstrategie: Wie beantwortest du Transferfragen zu '${lesson.title}'?`,
           a: `Nicht nur definieren: Ausgangslage nennen, technische Entscheidung begründen, Risiken/Folgen und eine passende Maßnahme darstellen.`
         });
-
-        while (existing.length < FLASHCARD_TARGET_PER_LESSON) {
-          const idx = existing.length + 1;
-          inject({
-            q: `Vertiefung ${idx}: Welcher typische Fehler tritt bei '${lesson.title}' häufig auf und wie vermeidest du ihn?`,
-            a: `Typisch sind fehlende Dokumentation, falsche Annahmen oder unvollständige Tests. Gegenmaßnahmen: Checklisten, Vier-Augen-Prinzip und standardisierte Validierung.`
-          });
-        }
 
         content.flashcards = existing;
       });
@@ -2175,6 +2195,9 @@ function renderSimpleMarkdown(markdown = "") {
 
 function buildLessonSections(content) {
     const sections = [];
+    if (content?.markdown) {
+        sections.push({ title: "Lerninhalt", markdown: content.markdown });
+    }
     if (content?.sections && typeof content.sections === "object") {
         Object.entries(content.sections).forEach(([key, markdown]) => {
             if (!markdown) return;
@@ -2211,7 +2234,10 @@ function openLesson(id) {
             <div class="lesson-title">${lesson.title}</div>
         </div>
         <div class="lesson-body">
-            ${c.description ? `<div class="lesson-section"><p>${escapeHtml(c.description)}</p></div>` : ""}
+            ${c.descriptionMarkdown
+              ? `<div class="lesson-section"><div class="lesson-markdown">${renderSimpleMarkdown(c.descriptionMarkdown)}</div></div>`
+              : (c.description ? `<div class="lesson-section"><p>${escapeHtml(c.description)}</p></div>` : "")
+            }
             ${sections.map(section => `
                 <div class="lesson-section">
                     <h3>${escapeHtml(section.title)}</h3>
