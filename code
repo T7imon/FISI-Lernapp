@@ -1049,6 +1049,11 @@ function navigateTo(pageId) {
     const navItem = document.querySelector(`.nav-item[data-page="${pageId}"]`);
     if (navItem) navItem.classList.add("active");
 
+    const sidebar = document.getElementById("sidebar");
+    if (sidebar.classList.contains("open") && window.matchMedia("(max-width: 1024px)").matches) {
+        sidebar.classList.remove("open");
+    }
+
     if (pageId === "dashboard") renderDashboard();
     if (pageId === "topics") renderTopics(getActiveTopicFilter(), getSearchQuery());
     if (pageId === "flashcards") renderFlashcardSetup();
