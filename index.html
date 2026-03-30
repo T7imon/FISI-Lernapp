@@ -222,6 +222,9 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
 .fc-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; border-radius: var(--radius-lg); border: 2px solid var(--border); text-align: center; overflow-y: auto; transform: translateZ(1px); -webkit-transform: translateZ(1px); }
 .fc-front { background: var(--bg-secondary); color: var(--text-primary); }
 .fc-back { background: var(--accent-light); border-color: var(--accent); color: var(--text-primary); transform: rotateY(180deg); }
+.fc-back-content { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; flex: 1; }
+.fc-back-actions { width: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding-top: 16px; border-top: 1px solid var(--border); margin-top: 16px; position: relative; z-index: 3; }
+.fc-back-actions .btn { position: relative; z-index: 3; }
 .fc-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); margin-bottom: 16px; font-weight: 700; }
 .fc-text { font-size: 1.1rem; font-weight: 500; line-height: 1.5; }
 
@@ -390,16 +393,18 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
                                 <div class="fc-text" id="fc-question">...</div>
                             </div>
                             <div class="fc-face fc-back">
-                                <span class="fc-label">Antwort</span>
-                                <div class="fc-text" id="fc-answer">...</div>
+                                <div class="fc-back-content">
+                                    <span class="fc-label">Antwort</span>
+                                    <div class="fc-text" id="fc-answer">...</div>
+                                </div>
+                                <div class="fc-back-actions">
+                                    <button class="btn btn-danger" id="fc-rate-repeat" onclick="event.stopPropagation(); rateCurrentCard('repeat')" disabled>↺ Wiederholen</button>
+                                    <button class="btn btn-warning" id="fc-rate-good" onclick="event.stopPropagation(); rateCurrentCard('good')" disabled>✓ Gut</button>
+                                    <button class="btn btn-success" id="fc-rate-easy" onclick="event.stopPropagation(); rateCurrentCard('easy')" disabled>⭐ Einfach</button>
+                                    <button class="btn btn-secondary ai-chat-btn" type="button" onclick="event.stopPropagation(); openAiChatForFlashcard()">🤖 KI fragen</button>
+                                </div>
                             </div>
                         </button>
-                    </div>
-                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                        <button class="btn btn-danger" id="fc-rate-repeat" onclick="rateCurrentCard('repeat')" disabled>↺ Wiederholen</button>
-                        <button class="btn btn-warning" id="fc-rate-good" onclick="rateCurrentCard('good')" disabled>✓ Gut</button>
-                        <button class="btn btn-success" id="fc-rate-easy" onclick="rateCurrentCard('easy')" disabled>⭐ Einfach</button>
-                        <button class="btn btn-secondary ai-chat-btn" type="button" onclick="openAiChatForFlashcard()">🤖 KI fragen</button>
                     </div>
                     <p style="margin-top:10px; color:var(--text-secondary); font-size:0.85rem;">
                         Tipp: Erst Karte umdrehen, dann Schwierigkeit bewerten.
