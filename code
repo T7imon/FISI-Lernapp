@@ -1159,6 +1159,26 @@ function renderTopics(filter="all", rawSearchTerm = "") {
     }
 }
 
+function setupTopicsAccordion() {
+    const topicsList = document.getElementById("topicsList");
+    if (!topicsList) return;
+
+    topicsList.addEventListener("click", (event) => {
+        const topicHeader = event.target.closest(".topic-group-header");
+        if (topicHeader) {
+            const topicGroup = topicHeader.closest(".topic-group");
+            if (topicGroup) topicGroup.classList.toggle("open");
+            return;
+        }
+
+        const subtopicHeader = event.target.closest(".subtopic-header");
+        if (subtopicHeader) {
+            const subtopicGroup = subtopicHeader.closest(".subtopic-group");
+            if (subtopicGroup) subtopicGroup.classList.toggle("open");
+        }
+    });
+}
+
 function toggleLesson(id) {
     Storage.toggleLesson(id);
     renderTopics(getActiveTopicFilter(), getSearchQuery());
@@ -1377,6 +1397,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // Mobile Sidebar
     document.getElementById("hamburger").onclick = () => document.getElementById("sidebar").classList.add("open");
     document.getElementById("sidebarClose").onclick = () => document.getElementById("sidebar").classList.remove("open");
+
+    setupTopicsAccordion();
 
     navigateTo("dashboard");
 });
