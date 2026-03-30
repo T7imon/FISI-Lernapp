@@ -1050,7 +1050,7 @@ function navigateTo(pageId) {
     if (navItem) navItem.classList.add("active");
 
     if (pageId === "dashboard") renderDashboard();
-    if (pageId === "topics") renderTopics("all");
+    if (pageId === "topics") renderTopics(getActiveTopicFilter(), getSearchQuery());
     if (pageId === "flashcards") renderFlashcardSetup();
     if (pageId === "trainer") { generateSubnetTask(); generateRaidTask(); }
     
@@ -1075,6 +1075,14 @@ function getStats() {
     return { total, done, percent: total ? Math.round((done/total)*100) : 0 };
 }
 
+function getSearchQuery() {
+    const input = document.getElementById("searchInput");
+    return input ? input.value.trim().toLowerCase() : "";
+}
+
+function getActiveTopicFilter() {
+    return document.querySelector(".chip.active")?.dataset.filter || "all";
+}
 
 
 
@@ -1105,10 +1113,13 @@ function renderDashboard() {
     });
 }
 
-function renderTopics(filter="all") {
+function renderTopics(filter="all", rawSearchTerm = "") {
     const list = document.getElementById("topicsList");
     list.innerHTML = "";
+    const searchTerm = rawSearchTerm.trim().toLowerCase();
+
     COURSE_DATA.forEach(topic => {
+        const topicMatches = topic.title.toLowerCase().includes(searchTerm);
         let html = `<div class="topic-group open">
             <div class="topic-group-header">
                 <div class="topic-group-icon" style="background:${topic.color}20; color:${topic.color}">${topic.icon}</div>
@@ -1117,12 +1128,18 @@ function renderTopics(filter="all") {
         
         let hasContent = false;
         topic.categories.forEach(cat => {
+            const catMatches = cat.title.toLowerCase().includes(searchTerm);
             let catHtml = `<div class="subtopic-group open"><div class="subtopic-header">${cat.title}</div><div class="subtopic-body">`;
             let hasLesson = false;
             cat.lessons.forEach(l => {
                 const done = Storage.isCompleted(l.id);
                 if(filter === "done" && !done) return;
                 if(filter === "open" && done) return;
+
+                const lessonMatches = l.title.toLowerCase().includes(searchTerm);
+                const includeBySearch = !searchTerm || topicMatches || catMatches || lessonMatches;
+                if(!includeBySearch) return;
+
                 hasLesson = true; hasContent = true;
                 catHtml += `
                     <div class="lesson-item" onclick="openLesson('${l.id}')">
@@ -1136,11 +1153,15 @@ function renderTopics(filter="all") {
         html += `</div></div>`;
         if(hasContent) list.innerHTML += html;
     });
+
+    if (!list.innerHTML) {
+        list.innerHTML = `<div class="topic-group"><div class="topic-group-header"><div class="topic-group-title">Keine Treffer gefunden.</div></div></div>`;
+    }
 }
 
 function toggleLesson(id) {
     Storage.toggleLesson(id);
-    renderTopics(document.querySelector(".chip.active").dataset.filter);
+    renderTopics(getActiveTopicFilter(), getSearchQuery());
     renderDashboard();
 }
 
@@ -1334,7 +1355,13 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".chip").forEach(c => c.onclick = (e) => {
         document.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));
         e.target.classList.add("active");
-        renderTopics(e.target.dataset.filter);
+        renderTopics(e.target.dataset.filter, getSearchQuery());
+    });
+
+    const searchInput = document.getElementById("searchInput");
+    searchInput.addEventListener("input", (e) => {
+        if (!document.getElementById("page-topics").classList.contains("active")) return;
+        renderTopics(getActiveTopicFilter(), e.target.value);
     });
 
     document.getElementById("themeToggle").onclick = () => {
