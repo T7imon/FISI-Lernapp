@@ -148,6 +148,9 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
   outline: 3px solid var(--accent);
   outline-offset: 2px;
 }
+.fc-card:focus:not(:focus-visible) {
+  outline: none;
+}
 .tpc-icon { width: 40px; height: 40px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 12px; }
 .tpc-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 4px; }
 .tpc-bar { height: 6px; background: var(--bg-tertiary); border-radius: 3px; overflow: hidden; margin-top: 12px;}
@@ -223,6 +226,10 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
 .fc-front { background: var(--bg-secondary); color: var(--text-primary); transform: rotateY(0deg) translateZ(1px); z-index: 2; }
 .fc-back { background: var(--accent-light); border-color: var(--accent); color: var(--text-primary); transform: rotateY(180deg) translateZ(1px); }
 .fc-back-content { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; flex: 1; }
+.fc-face,
+.fc-face *:not(.btn) {
+  pointer-events: none;
+}
 .fc-back-actions { width: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding-top: 16px; border-top: 1px solid var(--border); margin-top: 16px; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.3s ease, visibility 0.3s ease; }
 .fc-back-actions.is-visible { opacity: 1; visibility: visible; pointer-events: none; }
 .fc-back-actions .btn { pointer-events: auto; }
@@ -388,7 +395,7 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
                 <div id="fc-active-view" class="fc-active-session" style="display:none;">
                     <button class="btn btn-secondary" style="align-self: flex-start; margin-bottom: 20px;" onclick="stopFlashcards()">← Zurück</button>
                     <div class="fc-scene">
-                        <div class="fc-card" id="fc-card" role="button" tabindex="0" aria-label="Lernkarte umdrehen" onclick="flipCard()" onkeydown="handleFlashcardKeydown(event)">
+                        <div class="fc-card" id="fc-card" role="button" tabindex="0" aria-label="Lernkarte umdrehen" onclick="flipCard(event)" onkeydown="handleFlashcardKeydown(event)">
                             <div class="fc-face fc-front">
                                 <span class="fc-label">Frage</span>
                                 <div class="fc-text" id="fc-question">...</div>
@@ -2523,16 +2530,19 @@ function stopFlashcards() {
 function handleFlashcardKeydown(event) {
     if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
-        flipCard();
+        flipCard(event);
     }
 }
 
-function flipCard() {
+function flipCard(event) {
     const card = document.getElementById("fc-card");
     card.classList.toggle("is-flipped");
     const isFlipped = card.classList.contains("is-flipped");
     setRatingButtonsEnabled(isFlipped);
     setFlashcardActionsVisibility(isFlipped);
+    if (event?.type === "click") {
+        card.blur();
+    }
 }
 
 function goToNextCard() {
