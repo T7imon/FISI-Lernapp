@@ -1326,7 +1326,22 @@ function checkSubnet() {
         resBox.textContent = "Korrekt! Perfekt gelöst.";
         resBox.className = "trainer-result correct";
     } else {
-        resBox.innerHTML = `Fehler.<br>Richtig wäre:<br>Netz-ID: ${curSub.net}<br>Broadcast: ${curSub.bcast}<br>Hosts: ${curSub.hosts}`;
+        const hostBits = 32 - curSub.cidr;
+        const totalAddresses = Math.pow(2, hostBits);
+        const maskInt = (0xFFFFFFFF << hostBits) >>> 0;
+        const subnetMask = intToIp(maskInt);
+        resBox.innerHTML = `
+            Fehler.<br>
+            Richtig wäre:<br>
+            Netz-ID: ${curSub.net}<br>
+            Broadcast: ${curSub.bcast}<br>
+            Hosts: ${curSub.hosts}<br><br>
+            <strong>Rechenweg:</strong><br>
+            /${curSub.cidr} bedeutet ${hostBits} Host-Bits → 2^${hostBits} = ${totalAddresses} Adressen.<br>
+            Nutzbare Hosts: ${totalAddresses} - 2 (Netz-ID & Broadcast) = ${curSub.hosts}.<br>
+            Subnetzmaske: ${subnetMask}.<br>
+            Netz-ID = IP AND Maske, Broadcast = Netz-ID + Host-Bits auf 1.
+        `;
         resBox.className = "trainer-result incorrect";
     }
 }
@@ -1365,7 +1380,29 @@ function checkRaid() {
         resBox.textContent = "Korrekt! Richtig gerechnet.";
         resBox.className = "trainer-result correct";
     } else {
-        resBox.innerHTML = `Leider falsch. Die Netto-Kapazität beträgt ${curRaid.cap} TB.`;
+        let formula = "";
+        let calc = "";
+
+        if (curRaid.level === 1) {
+            formula = "RAID 1: Netto = 1 × Plattengröße (Spiegelung).";
+            calc = `1 × ${curRaid.size} TB = ${curRaid.cap} TB`;
+        } else if (curRaid.level === 5) {
+            formula = "RAID 5: Netto = (Anzahl Platten - 1) × Plattengröße.";
+            calc = `(${curRaid.disks} - 1) × ${curRaid.size} TB = ${curRaid.cap} TB`;
+        } else if (curRaid.level === 6) {
+            formula = "RAID 6: Netto = (Anzahl Platten - 2) × Plattengröße.";
+            calc = `(${curRaid.disks} - 2) × ${curRaid.size} TB = ${curRaid.cap} TB`;
+        } else if (curRaid.level === 10) {
+            formula = "RAID 10: Netto = (Anzahl Platten / 2) × Plattengröße.";
+            calc = `(${curRaid.disks} / 2) × ${curRaid.size} TB = ${curRaid.cap} TB`;
+        }
+
+        resBox.innerHTML = `
+            Leider falsch. Die Netto-Kapazität beträgt ${curRaid.cap} TB.<br><br>
+            <strong>Rechenweg:</strong><br>
+            ${formula}<br>
+            ${calc}
+        `;
         resBox.className = "trainer-result incorrect";
     }
 }
