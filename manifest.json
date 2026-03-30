@@ -1,0 +1,10 @@
+{
+  "name": "FISI Prüfungstrainer – AP Teil 2",
+  "short_name": "FISI Trainer",
+  "start_url": "./code",
+  "display": "standalone",
+  "background_color": "#f5f5f0",
+  "theme_color": "#3d5af1",
+  "lang": "de",
+  "description": "Offline nutzbarer Prüfungstrainer für die AP Teil 2."
+}

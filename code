@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#3d5af1">
+    <link rel="manifest" href="./manifest.json">
     <title>FISI Prüfungstrainer – AP Teil 2</title>
 <style>
 /* ========================================
@@ -135,6 +137,7 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
 .hero-stat-label { font-size: 0.78rem; color: var(--text-tertiary); font-weight: 500; }
 .topic-progress-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
 .topic-progress-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 20px; cursor: pointer; transition: all var(--transition); border-bottom: 3px solid transparent; width: 100%; display: block; text-align: left; font: inherit; color: inherit;}
+.topic-progress-card { text-decoration: none; }
 .topic-progress-card:hover { border-color: var(--accent); box-shadow: var(--shadow-md); transform: translateY(-2px); }
 .topic-progress-card:focus-visible,
 .lesson-item:focus-visible,
@@ -172,6 +175,9 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
 .lesson-checkbox { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; background: transparent; cursor: pointer; font-family: inherit; padding: 0; }
 .lesson-checkbox.checked { background: var(--success); border-color: var(--success); color: white;}
 .lesson-item-info { flex: 1; font-size: 0.88rem; font-weight: 500;}
+.lesson-meta { display: flex; align-items: center; gap: 8px; }
+.lesson-level-badge { border: 1px solid var(--border); border-radius: 999px; padding: 2px 8px; font-size: 0.72rem; color: var(--text-secondary); background: var(--bg-primary); }
+.lesson-bookmark { color: var(--warning); font-size: 0.9rem; }
 
 /* — Lesson View Detailed — */
 .lesson-container { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); }
@@ -201,6 +207,8 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
 .key-terms { background: var(--accent-light); border-left: 3px solid var(--accent); padding: 16px; margin: 16px 0; border-radius: var(--radius-sm); }
 .exam-tip { background: var(--warning-light); border-left: 3px solid var(--warning); padding: 16px; margin: 16px 0; border-radius: var(--radius-sm); }
 .lesson-footer { padding: 20px 28px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; }
+.lesson-controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; align-items: center; }
+.lesson-controls label { font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; }
 
 /* — Flashcards — */
 .fc-setup { background: var(--bg-secondary); padding: 24px; border-radius: var(--radius-lg); border: 1px solid var(--border); margin-bottom: 20px; }
@@ -1725,14 +1733,28 @@ ensureRichFlashcards();
    ======================================== */
 const Storage = {
   _data: null,
-  _defaults() { return { completed: [], theme: "light", llm: { provider: "openai", apiKey: "", model: "gpt-4.1-mini" }, flashcards: {} }; },
+  _defaults() { return { lessonProgress: {}, theme: "light", llm: { provider: "openai", apiKey: "", model: "gpt-4.1-mini" }, flashcards: {} }; },
   _normalize(data) {
     const defaults = this._defaults();
-    const rawCompleted = Array.isArray(data?.completed) ? data.completed : defaults.completed;
     const validLessonIds = new Set();
     COURSE_DATA.forEach(topic => topic.categories.forEach(cat => cat.lessons.forEach(lesson => validLessonIds.add(lesson.id))));
-
-    const completed = [...new Set(rawCompleted.filter(id => typeof id === "string" && validLessonIds.has(id)))];
+    const lessonProgress = {};
+    if (data?.lessonProgress && typeof data.lessonProgress === "object") {
+      for (const [lessonId, progress] of Object.entries(data.lessonProgress)) {
+        if (typeof lessonId !== "string" || !validLessonIds.has(lessonId) || !progress || typeof progress !== "object") continue;
+        const level = this._normalizeLevel(progress.level);
+        const bookmarked = Boolean(progress.bookmarked);
+        const lastOpenedAt = typeof progress.lastOpenedAt === "string" && !Number.isNaN(Date.parse(progress.lastOpenedAt)) ? progress.lastOpenedAt : null;
+        lessonProgress[lessonId] = { level, bookmarked, lastOpenedAt };
+      }
+    }
+    // Migration from legacy completed[] format.
+    if (Array.isArray(data?.completed)) {
+      data.completed.forEach(id => {
+        if (typeof id !== "string" || !validLessonIds.has(id)) return;
+        if (!lessonProgress[id]) lessonProgress[id] = { level: "applied", bookmarked: false, lastOpenedAt: null };
+      });
+    }
     const theme = data?.theme === "dark" ? "dark" : "light";
     const provider = data?.llm?.provider === "gemini" ? "gemini" : "openai";
     const apiKey = typeof data?.llm?.apiKey === "string" ? data.llm.apiKey : "";
@@ -1754,7 +1776,11 @@ const Storage = {
         };
       }
     }
-    return { completed, theme, llm: { provider, apiKey, model }, flashcards };
+    return { lessonProgress, theme, llm: { provider, apiKey, model }, flashcards };
+  },
+  _normalizeLevel(level) {
+    const valid = ["none", "read", "understood", "applied"];
+    return valid.includes(level) ? level : "none";
   },
   load() {
     try {
@@ -1771,16 +1797,49 @@ const Storage = {
     this.save();
     return this._data;
   },
-  toggleLesson(id) {
-    if(this.data.completed.includes(id)) {
-      this.data.completed = this.data.completed.filter(x => x !== id);
-    } else {
-      this.data.completed.push(id);
-    }
+  setLessonLevel(id, level) {
+    if (typeof id !== "string") return;
+    const normalizedLevel = this._normalizeLevel(level);
+    const entry = this.getLessonProgress(id);
+    this.data.lessonProgress[id] = { ...entry, level: normalizedLevel };
     this.save();
   },
-  isCompleted(id) { return this.data.completed.includes(id); }
+  toggleLessonBookmark(id) {
+    if (typeof id !== "string") return;
+    const entry = this.getLessonProgress(id);
+    this.data.lessonProgress[id] = { ...entry, bookmarked: !entry.bookmarked };
+    this.save();
+  },
+  touchLesson(id) {
+    if (typeof id !== "string") return;
+    const entry = this.getLessonProgress(id);
+    this.data.lessonProgress[id] = { ...entry, lastOpenedAt: new Date().toISOString() };
+    this.save();
+  },
+  getLessonProgress(id) {
+    const progress = this.data.lessonProgress?.[id];
+    if (progress && typeof progress === "object") {
+      return {
+        level: this._normalizeLevel(progress.level),
+        bookmarked: Boolean(progress.bookmarked),
+        lastOpenedAt: progress.lastOpenedAt || null
+      };
+    }
+    return { level: "none", bookmarked: false, lastOpenedAt: null };
+  },
+  isCompleted(id) { return this.getLessonProgress(id).level !== "none"; }
 };
+
+const LESSON_LEVELS = [
+  { value: "none", label: "Offen" },
+  { value: "read", label: "Gelesen" },
+  { value: "understood", label: "Verstanden" },
+  { value: "applied", label: "Angewendet" }
+];
+
+function getLessonLevelLabel(level) {
+  return LESSON_LEVELS.find(item => item.value === level)?.label || "Offen";
+}
 
 function navigateTo(pageId) {
     document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
@@ -1856,12 +1915,12 @@ function renderDashboard() {
         }));
         let pct = tTotal ? Math.round((tDone/tTotal)*100) : 0;
         grid.innerHTML += `
-            <button class="topic-progress-card" type="button" onclick="navigateTo('topics')" style="border-bottom-color: ${pct===100 ? 'var(--success)' : 'transparent'}">
+            <a class="topic-progress-card" href="#topics" role="link" onclick="event.preventDefault(); navigateTo('topics');" style="border-bottom-color: ${pct===100 ? 'var(--success)' : 'transparent'}">
                 <div class="tpc-icon" style="background:${topic.color}20; color:${topic.color}">${topic.icon}</div>
                 <div class="tpc-title">${topic.title}</div>
                 <div style="font-size:0.8rem; color:var(--text-tertiary)">${tDone} von ${tTotal} Lektionen</div>
                 <div class="tpc-bar"><div class="tpc-bar-fill" style="width:${pct}%; background:${pct===100 ? 'var(--success)' : topic.color}"></div></div>
-            </button>`;
+            </a>`;
     });
 }
 
@@ -1884,7 +1943,8 @@ function renderTopics(filter="all", rawSearchTerm = "") {
             let catHtml = `<div class="subtopic-group open"><div class="subtopic-header" role="button" tabindex="0">${cat.title}</div><div class="subtopic-body">`;
             let hasLesson = false;
             cat.lessons.forEach(l => {
-                const done = Storage.isCompleted(l.id);
+                const progress = Storage.getLessonProgress(l.id);
+                const done = progress.level !== "none";
                 if(filter === "done" && !done) return;
                 if(filter === "open" && done) return;
 
@@ -1895,8 +1955,12 @@ function renderTopics(filter="all", rawSearchTerm = "") {
                 hasLesson = true; hasContent = true;
                 catHtml += `
                     <div class="lesson-item" role="button" tabindex="0" onclick="openLesson('${l.id}')" onkeydown="activateOnKey(event, () => openLesson('${l.id}'))">
-                        <button class="lesson-checkbox ${done ? 'checked':''}" type="button" onclick="event.stopPropagation(); toggleLesson('${l.id}')" aria-label="Lektion ${done ? "als offen markieren" : "als erledigt markieren"}">✓</button>
+                        <button class="lesson-checkbox ${done ? 'checked':''}" type="button" onclick="event.stopPropagation(); toggleLesson('${l.id}')" aria-label="Lektion ${done ? "als offen markieren" : "als gelesen markieren"}">✓</button>
                         <div class="lesson-item-info">${l.title}</div>
+                        <div class="lesson-meta">
+                          ${progress.bookmarked ? `<span class="lesson-bookmark" aria-label="Lesezeichen gesetzt">🔖</span>` : ""}
+                          <span class="lesson-level-badge">${getLessonLevelLabel(progress.level)}</span>
+                        </div>
                     </div>`;
             });
             catHtml += `</div></div>`;
@@ -1938,7 +2002,8 @@ function setupTopicsAccordion() {
 }
 
 function toggleLesson(id) {
-    Storage.toggleLesson(id);
+    const current = Storage.getLessonProgress(id);
+    Storage.setLessonLevel(id, current.level === "none" ? "read" : "none");
     renderTopics(getActiveTopicFilter(), getSearchQuery());
     renderDashboard();
 }
@@ -2132,7 +2197,9 @@ function openLesson(id) {
 
     const c = lesson.content;
     const sections = buildLessonSections(c);
-    const isDone = Storage.isCompleted(id);
+    Storage.touchLesson(id);
+    const progress = Storage.getLessonProgress(id);
+    const isDone = progress.level !== "none";
     document.getElementById("lessonContainer").innerHTML = `
         <div class="lesson-header">
             <div class="lesson-breadcrumb">${topicTitle}</div>
@@ -2148,14 +2215,33 @@ function openLesson(id) {
             `).join("")}
             ${c.keyTerms ? `<div class="key-terms"><h4>🔑 Schlüsselbegriffe</h4><p>${escapeHtml(c.keyTerms)}</p></div>` : ""}
             ${c.examTip ? `<div class="exam-tip"><h4>💡 Prüfungstipp</h4><p>${escapeHtml(c.examTip)}</p></div>` : ""}
+            <div class="lesson-controls">
+                <label for="lessonLevelSelect">Vertiefungsgrad:</label>
+                <select class="input-field" id="lessonLevelSelect" style="max-width:220px;">
+                    ${LESSON_LEVELS.map(item => `<option value="${item.value}" ${item.value===progress.level ? "selected" : ""}>${item.label}</option>`).join("")}
+                </select>
+                <button class="btn ${progress.bookmarked ? 'btn-warning' : 'btn-secondary'}" type="button" id="lessonBookmarkBtn">${progress.bookmarked ? "🔖 Lesezeichen entfernen" : "🔖 Lesezeichen setzen"}</button>
+            </div>
             <div class="lesson-footer">
                 <button class="btn ${isDone ? 'btn-secondary' : 'btn-success'}" onclick="toggleLesson('${id}'); openLesson('${id}')">
-                    ${isDone ? "Als offen markieren" : "✓ Als erledigt markieren"}
+                    ${isDone ? "Als offen markieren" : "✓ Als gelesen markieren"}
                 </button>
                 <button class="btn btn-secondary ai-chat-btn" type="button" onclick="openAiChatForLesson('${id}')">🤖 KI fragen</button>
             </div>
         </div>
     `;
+    document.getElementById("lessonLevelSelect").addEventListener("change", (event) => {
+        Storage.setLessonLevel(id, event.target.value);
+        renderTopics(getActiveTopicFilter(), getSearchQuery());
+        renderDashboard();
+        openLesson(id);
+    });
+    document.getElementById("lessonBookmarkBtn").addEventListener("click", () => {
+        Storage.toggleLessonBookmark(id);
+        renderTopics(getActiveTopicFilter(), getSearchQuery());
+        renderDashboard();
+        openLesson(id);
+    });
     document.getElementById("backToTopics").onclick = () => navigateTo("topics");
     
     document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
@@ -2789,6 +2875,11 @@ function checkRaid() {
 document.addEventListener("DOMContentLoaded", () => {
     Storage.load();
     document.documentElement.setAttribute("data-theme", Storage.data.theme);
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("./sw.js").catch((error) => {
+            console.warn("Service Worker konnte nicht registriert werden:", error);
+        });
+    }
     
     document.querySelectorAll(".chip").forEach(c => c.onclick = (e) => {
         document.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));
