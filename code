@@ -185,6 +185,19 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
 .lesson-section ul { list-style: none; }
 .lesson-section ul li { padding: 6px 0 6px 20px; position: relative; }
 .lesson-section ul li::before { content: '▸'; position: absolute; left: 0; color: var(--accent); }
+.lesson-markdown { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.7; }
+.lesson-markdown h1, .lesson-markdown h2, .lesson-markdown h3, .lesson-markdown h4 { color: var(--text-primary); margin: 16px 0 8px; }
+.lesson-markdown h1 { font-size: 1.25rem; }
+.lesson-markdown h2 { font-size: 1.1rem; }
+.lesson-markdown h3 { font-size: 1rem; }
+.lesson-markdown p { margin: 8px 0; }
+.lesson-markdown ul, .lesson-markdown ol { margin: 8px 0 8px 20px; }
+.lesson-markdown li { margin: 4px 0; }
+.lesson-markdown pre { background: var(--bg-primary); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; overflow-x: auto; margin: 10px 0; }
+.lesson-markdown code { font-family: var(--font-mono); font-size: 0.84rem; }
+.lesson-markdown table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.86rem; }
+.lesson-markdown th, .lesson-markdown td { border: 1px solid var(--border); padding: 8px; text-align: left; vertical-align: top; }
+.lesson-markdown th { background: var(--bg-tertiary); color: var(--text-primary); font-weight: 700; }
 .key-terms { background: var(--accent-light); border-left: 3px solid var(--accent); padding: 16px; margin: 16px 0; border-radius: var(--radius-sm); }
 .exam-tip { background: var(--warning-light); border-left: 3px solid var(--warning); padding: 16px; margin: 16px 0; border-radius: var(--radius-sm); }
 .lesson-footer { padding: 20px 28px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; }
@@ -1191,6 +1204,191 @@ const COURSE_DATA = [
     ]
   },
   {
+    id: "betrieb-sicherheit-automation",
+    title: "Betrieb, Security und Automation",
+    icon: "🛡️",
+    color: "#16a34a",
+    categories: [
+      {
+        id: "cyber-security-governance",
+        title: "Cyber-Security & Governance",
+        lessons: [
+          {
+            id: "iso27001-isms",
+            title: "ISO 27001 & ISMS",
+            content: {
+              description: "ISO 27001 strukturiert Informationssicherheit über ein Managementsystem (ISMS) statt nur über einzelne Technik-Maßnahmen.",
+              sections: {
+                technische_details: `## PDCA im ISMS
+Ein ISMS basiert auf dem **Plan-Do-Check-Act-Zyklus**:
+
+| Phase | Ziel | Typische Ergebnisse |
+| --- | --- | --- |
+| Plan | Risiken erfassen und Maßnahmen planen | Risiko-Register, SoA |
+| Do | Maßnahmen umsetzen | Richtlinien, technische Controls |
+| Check | Wirksamkeit prüfen | KPI, interne Audits |
+| Act | Abweichungen beheben | CAPA, Maßnahmenplan |
+
+\`\`\`text
+Asset -> Bedrohung -> Schwachstelle -> Risiko -> Maßnahme
+\`\`\``,
+                konfiguration: `### Umsetzung im Betrieb
+- Scope klar abgrenzen (Standorte, Systeme, Prozesse)
+- Rollen definieren: ISB/CISO, Asset Owner, Prozessverantwortliche
+- **Statement of Applicability (SoA)** als zentrale Steuerdatei pflegen
+- Auditfähige Nachweise sammeln (Tickets, Logs, Freigaben, Schulungen)`,
+                troubleshooting: `### Häufige Stolperfallen
+1. Scope zu breit starten → Pilotbereich wählen.
+2. Maßnahmen ohne Risikobezug → zuerst Schutzbedarf + Risikoanalyse.
+3. Dokumentation lückenhaft → Nachweise sofort versioniert ablegen.`
+              },
+              examTip: "In AP2-Aufgaben immer den Unterschied zwischen Managementsystem (ISMS) und technischem Einzel-Tool benennen.",
+              keyTerms: "ISMS | SoA | PDCA | Audit | Risikoanalyse"
+            }
+          },
+          {
+            id: "bsi-grundschutz",
+            title: "BSI Grundschutz kompakt",
+            content: {
+              description: "Der BSI IT-Grundschutz ist im deutschsprachigen Raum zentral für strukturierte Sicherheitskonzepte und in IHK-Prüfungen häufig.",
+              sections: {
+                technische_details: `## Kernbausteine
+- IT-Grundschutz-Kompendium mit Bausteinen (ORP, CON, OPS, SYS, APP, IND)
+- Schutzbedarfsfeststellung: **normal / hoch / sehr hoch**
+- Modellierung: Welche Bausteine gelten für welches Zielobjekt?
+
+| Methode | Einsatz |
+| --- | --- |
+| Basis-Absicherung | Schneller Einstieg |
+| Standard-Absicherung | Regelbetrieb |
+| Kern-Absicherung | Kritische Prozesse priorisieren |`,
+                konfiguration: `### Vorgehensmodell
+1. Informationsverbund festlegen
+2. Strukturanalyse und Modellierung durchführen
+3. Basis-Sicherheitscheck dokumentieren
+4. Umsetzungsplan mit Prioritäten erstellen`,
+                troubleshooting: `### Prüfungsrelevante Fehlerbilder
+- Verwechslung von ISO 27001 und BSI-Methodik
+- Fehlende Begründung für Schutzbedarf
+- Maßnahmenliste ohne Verantwortliche und Termine`
+              },
+              examTip: "Bei Konzeptfragen liefert eine tabellarische Gegenüberstellung ISO 27001 vs. BSI oft Extrapunkte.",
+              keyTerms: "IT-Grundschutz | Schutzbedarf | Modellierung | Basis-Sicherheitscheck"
+            }
+          }
+        ]
+      },
+      {
+        id: "server-dienste",
+        title: "Server-Dienste (AP2 Deep Dive)",
+        lessons: [
+          {
+            id: "ldap-ad-basics",
+            title: "LDAP / Active Directory",
+            content: {
+              description: "Verzeichnisdienste sind Kernbestandteil für Identität, Authentifizierung und zentrale Administration.",
+              sections: {
+                technische_details: `## Architektur
+- LDAP-Objekte in hierarchischem Baum (DN, OU, CN)
+- Active Directory ergänzt LDAP um Kerberos, GPO, Replikation
+
+\`\`\`ldif
+dn: cn=Max Mustermann,ou=Users,dc=firma,dc=local
+objectClass: inetOrgPerson
+cn: Max Mustermann
+sn: Mustermann
+mail: max.mustermann@firma.local
+\`\`\``,
+                konfiguration: `### Betriebsaufgaben
+- OU-Struktur nach Verantwortlichkeit planen
+- Gruppenstrategie: AGDLP/AGUDLP
+- Passwort- und Lockout-Richtlinien über GPO durchsetzen
+- LDAP(S) nur verschlüsselt (StartTLS/LDAPS) anbieten`,
+                troubleshooting: `### Typische Störungen
+- Zeitabweichung >5 Minuten verursacht Kerberos-Fehler
+- DNS-Probleme verhindern Domänen-Join
+- Replikationsfehler zwischen Domain Controllern`
+              },
+              examTip: "Bei AD-Aufgaben immer DNS, Zeitdienst und Gruppenkonzept mitdenken.",
+              keyTerms: "LDAP | AD DS | Kerberos | GPO | OU"
+            }
+          },
+          {
+            id: "mailserver-postfix-exchange",
+            title: "Mail-Server (Postfix/Exchange)",
+            content: {
+              description: "Mail-Infrastruktur bleibt geschäftskritisch und ist technisch wie organisatorisch sicher zu betreiben.",
+              sections: {
+                technische_details: `## Mail-Transportkette
+MUA → MSA → MTA → MDA → Mailbox
+
+| DNS-Record | Zweck |
+| --- | --- |
+| MX | Zuständiger Mailserver |
+| SPF (TXT) | Sender-Authorisierung |
+| DKIM (TXT + Key) | Signaturprüfung |
+| DMARC (TXT) | Policy & Reporting |`,
+                konfiguration: `### Mindest-Härtung
+- TLS erzwingen (Submission 587 mit Auth, SMTPS/STARTTLS)
+- SPF, DKIM, DMARC sauber konfigurieren
+- SMTP-Relay nur für bekannte Netze/User
+- Queue-Monitoring und Backup/Restore testen`,
+                troubleshooting: `### Fehlersuche
+1. Zustellung fehlt: MX und Firewall prüfen.
+2. Spam-Einstufung: SPF/DKIM/DMARC und PTR prüfen.
+3. Verzögerung: Queue und DNS-Latenz analysieren.`
+              },
+              examTip: "In AP2-Lösungen sowohl technische Maßnahmen als auch Betriebsprozesse (Monitoring, Incident-Handling) nennen.",
+              keyTerms: "MTA | SPF | DKIM | DMARC | Submission"
+            }
+          }
+        ]
+      },
+      {
+        id: "skripting-automation",
+        title: "Skripting für Automatisierung",
+        lessons: [
+          {
+            id: "bash-powershell-grundlagen",
+            title: "Bash & PowerShell Grundlagen",
+            content: {
+              description: "Skripting spart Zeit in Betrieb und Incident-Response und ist im AP2-Projektkontext sehr hilfreich.",
+              sections: {
+                technische_details: `## Vergleich Bash vs. PowerShell
+| Bereich | Bash | PowerShell |
+| --- | --- | --- |
+| Datenmodell | Text-Pipelines | Objekt-Pipelines |
+| Standardplattform | Linux/Unix | Windows (cross-platform möglich) |
+| Paketverwaltung | apt/yum/dnf usw. | PowerShell Gallery |
+
+\`\`\`bash
+#!/usr/bin/env bash
+df -h | awk 'NR==1 || /\\/dev\\// {print}'
+\`\`\`
+
+\`\`\`powershell
+Get-PSDrive -PSProvider FileSystem |
+  Select-Object Name,Used,Free
+\`\`\``,
+                konfiguration: `### Praxis-Bausteine
+- Skripte versionieren (Git) und dokumentieren
+- Parameter + Exit-Codes sauber definieren
+- Secrets niemals hardcoden (Vault/Secret-Store nutzen)
+- Aufgaben planen: cron / systemd timer / Task Scheduler`,
+                troubleshooting: `### Debugging-Tipps
+- Bash: \`set -euo pipefail\` + ShellCheck
+- PowerShell: \`Set-StrictMode -Version Latest\` + \`-Verbose\`
+- Logs strukturiert schreiben (Zeitstempel, Host, Fehlercode)`
+              },
+              examTip: "In der Doku punkten reproduzierbare Skripte mit klaren Parametern und Fehlerbehandlung.",
+              keyTerms: "Automation | Pipeline | Exit-Code | Cron | Task Scheduler"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
     id: "wirtschaft-und-soziales",
     title: "Wirtschaft und Soziales",
     icon: "💼",
@@ -1574,6 +1772,151 @@ async function importProgress(file) {
     }
 }
 
+function escapeHtml(raw = "") {
+    return String(raw)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+function renderSimpleMarkdown(markdown = "") {
+    const lines = String(markdown).replace(/\r\n/g, "\n").split("\n");
+    let html = "";
+    let inCodeBlock = false;
+    let codeBuffer = [];
+    let listMode = null;
+    let paragraph = [];
+    let tableMode = false;
+    let tableHeader = [];
+    let tableBody = [];
+
+    const flushParagraph = () => {
+        if (!paragraph.length) return;
+        html += `<p>${inlineMarkdown(paragraph.join(" "))}</p>`;
+        paragraph = [];
+    };
+
+    const flushList = () => {
+        if (!listMode) return;
+        html += `</${listMode}>`;
+        listMode = null;
+    };
+
+    const flushTable = () => {
+        if (!tableMode) return;
+        const thead = `<thead><tr>${tableHeader.map(cell => `<th>${inlineMarkdown(cell)}</th>`).join("")}</tr></thead>`;
+        const tbody = `<tbody>${tableBody.map(row => `<tr>${row.map(cell => `<td>${inlineMarkdown(cell)}</td>`).join("")}</tr>`).join("")}</tbody>`;
+        html += `<table>${thead}${tbody}</table>`;
+        tableMode = false;
+        tableHeader = [];
+        tableBody = [];
+    };
+
+    const inlineMarkdown = (text = "") => escapeHtml(text)
+        .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+        .replace(/`(.+?)`/g, "<code>$1</code>");
+
+    for (const line of lines) {
+        if (line.trim().startsWith("```")) {
+            flushParagraph();
+            flushList();
+            flushTable();
+            if (!inCodeBlock) {
+                inCodeBlock = true;
+                codeBuffer = [];
+            } else {
+                html += `<pre><code>${escapeHtml(codeBuffer.join("\n"))}</code></pre>`;
+                inCodeBlock = false;
+            }
+            continue;
+        }
+        if (inCodeBlock) {
+            codeBuffer.push(line);
+            continue;
+        }
+
+        const trimmed = line.trim();
+        if (!trimmed) {
+            flushParagraph();
+            flushList();
+            flushTable();
+            continue;
+        }
+
+        if (trimmed.startsWith("#")) {
+            flushParagraph();
+            flushList();
+            flushTable();
+            const level = Math.min(4, trimmed.match(/^#+/)[0].length);
+            html += `<h${level}>${inlineMarkdown(trimmed.slice(level).trim())}</h${level}>`;
+            continue;
+        }
+
+        if (trimmed.includes("|")) {
+            const cells = trimmed.split("|").map(cell => cell.trim()).filter(Boolean);
+            const isDivider = cells.every(cell => /^:?-{3,}:?$/.test(cell));
+            if (cells.length >= 2) {
+                flushParagraph();
+                flushList();
+                if (!tableMode) {
+                    tableMode = true;
+                    tableHeader = cells;
+                    continue;
+                }
+                if (!isDivider) tableBody.push(cells);
+                continue;
+            }
+        }
+
+        const unordered = trimmed.match(/^[-*]\s+(.+)/);
+        const ordered = trimmed.match(/^\d+\.\s+(.+)/);
+        if (unordered || ordered) {
+            flushParagraph();
+            flushTable();
+            const mode = unordered ? "ul" : "ol";
+            if (listMode !== mode) {
+                flushList();
+                html += `<${mode}>`;
+                listMode = mode;
+            }
+            html += `<li>${inlineMarkdown((unordered || ordered)[1])}</li>`;
+            continue;
+        }
+
+        flushList();
+        flushTable();
+        paragraph.push(trimmed);
+    }
+
+    if (inCodeBlock) html += `<pre><code>${escapeHtml(codeBuffer.join("\n"))}</code></pre>`;
+    flushParagraph();
+    flushList();
+    flushTable();
+    return html;
+}
+
+function buildLessonSections(content) {
+    const sections = [];
+    if (content?.sections && typeof content.sections === "object") {
+        Object.entries(content.sections).forEach(([key, markdown]) => {
+            if (!markdown) return;
+            const title = key.replace(/_/g, " ").replace(/\b\w/g, ch => ch.toUpperCase());
+            sections.push({ title, markdown });
+        });
+    }
+    if (sections.length) return sections;
+
+    if (content?.keyPoints?.length) {
+        sections.push({
+            title: "Wichtige Punkte",
+            markdown: content.keyPoints.map(point => `- ${point}`).join("\n")
+        });
+    }
+    return sections;
+}
+
 function openLesson(id) {
     let lesson, topicTitle;
     COURSE_DATA.forEach(t => t.categories.forEach(c => c.lessons.forEach(l => {
@@ -1582,6 +1925,7 @@ function openLesson(id) {
     if(!lesson) return;
 
     const c = lesson.content;
+    const sections = buildLessonSections(c);
     const isDone = Storage.isCompleted(id);
     document.getElementById("lessonContainer").innerHTML = `
         <div class="lesson-header">
@@ -1589,9 +1933,15 @@ function openLesson(id) {
             <div class="lesson-title">${lesson.title}</div>
         </div>
         <div class="lesson-body">
-            <div class="lesson-section"><p>${c.description}</p></div>
-            <div class="lesson-section"><h3>Wichtige Punkte</h3><ul>${c.keyPoints.map(p=>`<li>${p}</li>`).join("")}</ul></div>
-            ${c.examTip ? `<div class="exam-tip"><h4>💡 Prüfungstipp</h4><p>${c.examTip}</p></div>` : ""}
+            ${c.description ? `<div class="lesson-section"><p>${escapeHtml(c.description)}</p></div>` : ""}
+            ${sections.map(section => `
+                <div class="lesson-section">
+                    <h3>${escapeHtml(section.title)}</h3>
+                    <div class="lesson-markdown">${renderSimpleMarkdown(section.markdown)}</div>
+                </div>
+            `).join("")}
+            ${c.keyTerms ? `<div class="key-terms"><h4>🔑 Schlüsselbegriffe</h4><p>${escapeHtml(c.keyTerms)}</p></div>` : ""}
+            ${c.examTip ? `<div class="exam-tip"><h4>💡 Prüfungstipp</h4><p>${escapeHtml(c.examTip)}</p></div>` : ""}
             <div class="lesson-footer">
                 <button class="btn ${isDone ? 'btn-secondary' : 'btn-success'}" onclick="toggleLesson('${id}'); openLesson('${id}')">
                     ${isDone ? "Als offen markieren" : "✓ Als erledigt markieren"}
@@ -1810,10 +2160,6 @@ Regeln:
 let aiChatState = { contextTitle: "", contextBody: "", contextType: "", messages: [] };
 let endlessState = { topic: "", scenario: "", question: "", sampleSolution: "" };
 
-function escapeHtml(value = "") {
-    return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
-}
-
 function getCurrentLlmSettings() {
     const provider = document.getElementById("chatProvider")?.value || Storage.data.llm.provider;
     const modelInput = document.getElementById("chatModel")?.value?.trim();
@@ -1894,11 +2240,12 @@ function openAiChatForLesson(lessonId) {
     const { lesson, topicTitle } = findLessonById(lessonId);
     if (!lesson) return;
     const c = lesson.content;
+    const sections = buildLessonSections(c);
     const promptContext = [
         `Themenbereich: ${topicTitle}`,
         `Lektion: ${lesson.title}`,
-        `Beschreibung: ${c.description}`,
-        `Wichtige Punkte: ${c.keyPoints.join(" | ")}`,
+        c.description ? `Beschreibung: ${c.description}` : "",
+        `Inhaltsblöcke: ${sections.map(section => `${section.title}: ${section.markdown}`).join(" || ")}`,
         c.examTip ? `Prüfungstipp: ${c.examTip}` : ""
     ].filter(Boolean).join("\n");
     openAiChat({ type: "Lektion", title: lesson.title, body: promptContext });
