@@ -226,13 +226,8 @@ body { font-family: var(--font-body); background: var(--bg-primary); color: var(
 .fc-front { background: var(--bg-secondary); color: var(--text-primary); transform: rotateY(0deg) translateZ(1px); z-index: 2; }
 .fc-back { background: var(--accent-light); border-color: var(--accent); color: var(--text-primary); transform: rotateY(180deg) translateZ(1px); }
 .fc-back-content { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; flex: 1; }
-.fc-face,
-.fc-face *:not(.btn) {
-  pointer-events: none;
-}
-.fc-back-actions { width: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding-top: 16px; border-top: 1px solid var(--border); margin-top: 16px; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.3s ease, visibility 0.3s ease; }
-.fc-back-actions.is-visible { opacity: 1; visibility: visible; pointer-events: none; }
-.fc-back-actions .btn { pointer-events: auto; }
+.fc-back-actions { width: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding-top: 16px; border-top: 1px solid var(--border); margin-top: 16px; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
+.fc-back-actions.is-visible { opacity: 1; visibility: visible; }
 .fc-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); margin-bottom: 16px; font-weight: 700; }
 .fc-text { font-size: 1.1rem; font-weight: 500; line-height: 1.5; }
 
@@ -2540,9 +2535,8 @@ function flipCard(event) {
     const isFlipped = card.classList.contains("is-flipped");
     setRatingButtonsEnabled(isFlipped);
     setFlashcardActionsVisibility(isFlipped);
-    if (event?.type === "click") {
-        card.blur();
-    }
+    // Fokus asynchron entfernen, um den blauen :focus-visible Rahmen zuverlässig zu löschen
+    setTimeout(() => card.blur(), 10);
 }
 
 function goToNextCard() {
